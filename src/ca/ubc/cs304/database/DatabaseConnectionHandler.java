@@ -1,5 +1,9 @@
 package ca.ubc.cs304.database;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -7,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import ca.ubc.cs304.model.BranchModel;
 
@@ -161,5 +166,27 @@ public class DatabaseConnectionHandler {
 		} catch (SQLException e) {
 			System.out.println(EXCEPTION_TAG + " " + e.getMessage());
 		}
+	}
+
+
+	//REQUIRES: connection must be established to oracle to login
+
+	public void firstTimeSetup() throws FileNotFoundException {
+		ArrayList<String> statements = new ArrayList<String>();
+		try {
+			Scanner in = new Scanner(new File("SQL\\setuptables.sql"));
+			in.useDelimiter(";");
+			while (in.hasNext())
+				statements.add(in.next());
+			for (String statement: statements) {
+				PreparedStatement p = connection.prepareStatement(statement);
+				p.executeUpdate();
+				connection.commit();
+				p.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 }
