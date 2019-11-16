@@ -9,14 +9,6 @@ How to run project:
 
 Functionality todo list:
 
-create tables for (if not initalized):
-• Reservations 
-• Rentals 
-• Vehicles 
-• VehicleTypes 
-• Customers 
-• Returns 
-
 
 Transactions performed by a customer
 
