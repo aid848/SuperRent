@@ -37,7 +37,7 @@ with the vehicles’ details should be displayed).
      */
 
     //should return a number and have list of returned tuples ready to go?
-    public int viewNumberOfVehicles(String type, String location, Date pickupDate, Date returnDate) {
+    public int viewNumberOfVehicles(String type, String location, Date pickupDate, Date returnDate) throws SQLException {
         boolean[] entered = new boolean[4]; //bitwise array of what info is present
         entered[0] = !(type == null);
         entered[1] = !(location == null);
@@ -72,32 +72,35 @@ be shown.
      */
 
     public void makeReservation(int driversLicense,String location,String vehicleType, Date pickupDate, Date returnDate) throws SQLException {
-        checkForExistingCustomer(driversLicense);
-        if (viewNumberOfVehicles(vehicleType,location,pickupDate,returnDate)>0) { //vehicle exists
+        if (checkForExistingCustomer(driversLicense) & viewNumberOfVehicles(vehicleType,location,pickupDate,returnDate)>0) { //vehicle exists
             //TODO add method to determine if view number of vehicles has a date within an interval, find date interval class/method?
         } else {
         }
     }
 
-    //if customer is new create new customer before proceding with caller's procedure
-    private void checkForExistingCustomer(int driversLicense) throws SQLException {
-        String query = "SELECT DISTINCT COUNT(*) AS C FROM CUSTOMER WHERE DLICENSE = " + driversLicense;
+    //if customer is new create new customer before preceding with caller's procedure
+    public boolean checkForExistingCustomer(int driversLicense) throws SQLException {
+        String query = "SELECT DISTINCT COUNT(*) AS C FROM Customer WHERE DLICENSE = " + driversLicense;
         Statement search = db.connection.createStatement();
         ResultSet output = search.executeQuery(query);
+        output.next(); //iterates through rows but there's only 1 row in the count
         int number = output.getInt("C");
         if (number < 1) {
             createNewCustomer(driversLicense);
         } else if (number != 1) {
             throw new IllegalStateException("More than one instance of the same customer is in db");
         }
+        return true;
     }
+
 
     private void createNewCustomer(int driversLicense) throws SQLException {
         String[] newCustomerSet; //todo hook into gui and display popup with missing info
-        int cellphone = Integer.parseInt(newCustomerSet[0]);
-        String name = newCustomerSet[1];
-        String address = newCustomerSet[2];
-        createNewCustomer(cellphone,name,address,driversLicense);
+//        newCustomerSet = Gui.newCustomerDialog();
+//        int cellphone = Integer.parseInt(newCustomerSet[0]);
+//        String name = newCustomerSet[1];
+//        String address = newCustomerSet[2];
+//        createNewCustomer(cellphone,name,address,driversLicense);
     }
 
     private void createNewCustomer(int cellphone,String name, String address, int driversLicense) throws SQLException {
