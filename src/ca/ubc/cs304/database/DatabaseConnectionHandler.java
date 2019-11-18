@@ -23,7 +23,7 @@ public class DatabaseConnectionHandler {
 	private static final String EXCEPTION_TAG = "[EXCEPTION]";
 	private static final String WARNING_TAG = "[WARNING]";
 	
-	private Connection connection = null;
+	public Connection connection = null;
 	
 	public DatabaseConnectionHandler() {
 		try {
