@@ -175,6 +175,7 @@ public class DatabaseConnectionHandler {
 		ArrayList<String> statements = new ArrayList<String>();
 		try {
 			Scanner in = new Scanner(new File("SQL\\setuptables.sql")); //change to droptables.sql or populatetables.sql as needed
+            //Scanner in = new Scanner(new File("SQL\\populatetables.sql")); //change to droptables.sql or populatetables.sql as needed
 			in.useDelimiter(";");
 			while (in.hasNext())
 				statements.add(in.next());
