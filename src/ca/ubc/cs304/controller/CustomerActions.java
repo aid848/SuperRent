@@ -3,9 +3,8 @@ package ca.ubc.cs304.controller;
 import ca.ubc.cs304.database.DatabaseConnectionHandler;
 import ca.ubc.cs304.model.Branch;
 import ca.ubc.cs304.model.Customer;
-
 import java.sql.*;
-import java.time.Period;
+import java.util.NoSuchElementException;
 
 
 public class CustomerActions {
@@ -152,11 +151,6 @@ with the vehicles’ details should be displayed).
         return count.getInt("C");
     }
 
-    public String[] vehiclesOfInterestIterator() {
-        //return string array of all vehicles obtained by view number of vehicles
-        //stub
-        return null;
-    }
 
     /*
     Make a reservation. If a customer is new, add the customer’s details to the database.
@@ -175,14 +169,26 @@ If the customer’s desired vehicle is not available, an appropriate error messa
 be shown.
      */
 
-    public void makeReservation(int driversLicense,String location,String vehicleType, Timestamp pickupDate, Timestamp returnDate,Branch branch) throws SQLException {
-        if (checkForExistingCustomer(driversLicense) & viewNumberOfVehicles(vehicleType,location,pickupDate,returnDate,branch)>0) { //vehicle exists
-            //TODO add method to determine if view number of vehicles has a date within an interval, find date interval class/method?
+    public boolean makeReservationCheck(int driversLicense,String location,String vehicleType, Timestamp pickupDate, Timestamp returnDate,Branch branch) throws SQLException {
+        int hits = viewNumberOfVehicles(vehicleType,location,pickupDate,returnDate,branch);
+        if (checkForExistingCustomer(driversLicense) & hits>0) { //vehicle exists
+            if(!checkForExistingCustomer(driversLicense)) {
+                createNewCustomer();
+            }
+            return true;
         } else {
+            return false;
         }
     }
 
-    //if customer is new create new customer before preceding with caller's procedure
+    public void makeReservation(int confirmationNumber,String vehicleTypeName ,int driversLicense, Timestamp fromDateTime,Timestamp toDateTime) throws SQLException {
+        String statement = "INSERT INTO Reservation VALUES (" + confirmationNumber + "," + vehicleTypeName + "," +driversLicense + "," +  fromDateTime + "," + toDateTime + ")";
+        PreparedStatement ps = db.connection.prepareStatement(statement);
+        ps.executeUpdate();
+        db.connection.commit();
+    }
+
+    //if customer checks to see if customer is in database
     public boolean checkForExistingCustomer(int driversLicense) throws SQLException {
         String query = "SELECT DISTINCT COUNT(*) AS C FROM Customer WHERE DLICENSE = " + driversLicense;
         Statement search = db.connection.createStatement();
@@ -190,7 +196,6 @@ be shown.
         output.next(); //iterates through rows but there's only 1 row in the count
         int number = output.getInt("C");
         if (number < 1) {
-            createNewCustomer();
             return false;
         } else if (number > 1) {
             throw new IllegalStateException("More than one instance of the same customer is in db");
@@ -208,21 +213,11 @@ be shown.
 
     private void createNewCustomer(Customer c) throws SQLException {
         String orderedValues = c.getCellphone() + "," + c.getName() + "," + c.getAddress() + "," + c.getDlicense();
-        String statement = "INSERT INTO Customer VALUES " + orderedValues;
+        String statement = "INSERT INTO Customer VALUES (" + orderedValues + ")";
         PreparedStatement ps = db.connection.prepareStatement(statement);
         ps.executeUpdate();
         db.connection.commit();
     }
-
-    private void handleErrors(Exception e) {
-        try {
-            db.connection.rollback();
-            e.printStackTrace();
-        } catch (SQLException b) { //You're in real trouble if this is called
-            b.printStackTrace();
-            e.printStackTrace();
-        }
-    }
-
+    
 }
 
