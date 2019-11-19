@@ -17,7 +17,7 @@ public class CustomerActionsTest {
     @Before
     public void setup() { //YOU MUST HAVE run THE CREATETABLES AND THE POPULATETABLES SCRIPT
         db = new DatabaseConnectionHandler();
-        db.login("ora_afrost99","a31139991");
+        db.login("ora_","a");
         customerActions = new CustomerActions(db);
     }
 
