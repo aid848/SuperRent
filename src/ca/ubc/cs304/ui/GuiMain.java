@@ -12,7 +12,7 @@ import java.util.Stack;
 public class GuiMain implements LoginWindowDelegate {
     Customer customer;
     LoginWindow login;
-    DatabaseConnectionHandler db;
+    static DatabaseConnectionHandler db;
     private final Dimension standardWindowSize = new Dimension(600,400);
     private final Dimension standardButtonSize = new Dimension(50,20);
     Stack<JFrame> openWindows;
