@@ -2,12 +2,12 @@ package ca.ubc.cs304.model;
 
 public class Customer {
 //instance of customer tuple abstraction
-    private int cellphone;
+    private long cellphone;
     private String name;
     private String address;
     private int dlicense;
 
-    public Customer(int cellphone, String name, String address, int dlicense) {
+    public Customer(long cellphone, String name, String address, int dlicense) {
         this.cellphone = cellphone;
         this.name = name;
         this.address = address;
@@ -21,7 +21,7 @@ public class Customer {
         this.dlicense = 0;
     }
 
-    public int getCellphone() {
+    public long getCellphone() {
         return cellphone;
     }
 

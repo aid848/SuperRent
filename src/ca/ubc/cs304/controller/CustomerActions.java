@@ -3,18 +3,22 @@ package ca.ubc.cs304.controller;
 import ca.ubc.cs304.database.DatabaseConnectionHandler;
 import ca.ubc.cs304.model.Branch;
 import ca.ubc.cs304.model.Customer;
-import java.sql.*;
-import java.util.NoSuchElementException;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDateTime;
 
 
 public class CustomerActions {
-    //Customer database actions as described in pdf will live here
+    //Customer database actions as described in pdf lives here
 
     DatabaseConnectionHandler db;
     ResultSet vehiclesOfInterest; //Used for viewNumberOfVehicles' returned tuples
 
-    //TODO on sql exception rollbackConnection method for db
 
+    //Caller of all methods must handle SQLException
     public CustomerActions(DatabaseConnectionHandler db) {
         this.db = db;
         assert (db.connection!=null); //check for database login otherwise methods won't run
@@ -33,8 +37,8 @@ the user desires to do so (e.g., if the user clicks on the number of available v
 with the vehicles’ details should be displayed).
      */
 
-    //should return a number and have list of returned tuples ready to go?
-    public int viewNumberOfVehicles(String type, String location, Timestamp pickupDate, Timestamp returnDate, Branch branch) throws SQLException {
+    //should return a number and have list of returned tuples ready to go
+    public int viewNumberOfVehicles(String type, String location, LocalDateTime pickupDate, LocalDateTime returnDate, Branch branch) throws SQLException {
         boolean[] entered = new boolean[5]; //bitwise array of what info is present
         entered[0] = !(type == null);
         entered[1] = !(location == null);
@@ -42,26 +46,30 @@ with the vehicles’ details should be displayed).
         entered[3] = !(returnDate == null);
         entered[4] = !(branch == null);
         String query = viewNumberOfVehiclesQueryGen(entered, type, location, pickupDate, returnDate, branch);
-        Statement state = db.connection.createStatement();
+        Statement state = db.connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
         vehiclesOfInterest = state.executeQuery(query); //saves results to class var for later
-        //TODO querry db with required info and save to results
-        return countTuples(vehiclesOfInterest,"Rent"); //table to querry wrong?
+        return countTuples(vehiclesOfInterest); //table to query wrong?
     }
 
     //REQUIRES: viewNumberOfVehicles to have been run
-    public String retrieveVehicles() throws SQLException {
+    //Just shows names of vehicles returned from viewNumberOfVehicles
+    public String retrieveVehicles() throws SQLException { //rework to gui elements with vid embedded for identifying what the user selects
         if (vehiclesOfInterest==null) {
             return "";
         }
+        vehiclesOfInterest.beforeFirst();
         StringBuilder output = new StringBuilder();
-        while(vehiclesOfInterest.next()) {
-            output.append(vehiclesOfInterest.getStatement()); //test to see if this returns rows
+        while (vehiclesOfInterest.next()) {
+            //SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
+            output.append(vehiclesOfInterest.getString(1)).append(" ").append(vehiclesOfInterest.getString(2) + " ").append(vehiclesOfInterest.getString(3)).append(" ").append(vehiclesOfInterest.getString(4) + " ").append(vehiclesOfInterest.getString(5)).append(" ").append(vehiclesOfInterest.getString(6) + " ").append(vehiclesOfInterest.getString(7)).append(" ").append(vehiclesOfInterest.getString(8) + " ").append(vehiclesOfInterest.getString(9)).append(" ").append(vehiclesOfInterest.getString(10)).append("\n");
         }
+
+
         return output.toString();
     }
 
-    public String viewNumberOfVehiclesQueryGen(boolean[] entered,String type, String location, Timestamp pickupDate, Timestamp returnDate, Branch branch) {
-            //TODO change v.license = r.license to left outer join!
+    private String viewNumberOfVehiclesQueryGen(boolean[] entered, String type, String location, LocalDateTime pickupDate, LocalDateTime returnDate, Branch branch) {
             if (!entered[0]) { //no type
                 if (!entered[1]) { //no location
                     if ((entered[2] & entered[3])) { //has time interval
@@ -93,64 +101,90 @@ with the vehicles’ details should be displayed).
             }
     }
 
-    private String viewNumberOfVehiclesTypeAndLocationAndTime(String type, String location, Timestamp pickupDate, Timestamp returnDate) {
-        return "SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v,vtname,v.location,v.city\n" +
-                "FROM Vehicle v, Rent r\n" +
-                "WHERE v.vlicense = r.vlicense AND "+ pickupDate.toString() + " > r.toDateTime AND " + returnDate.toString() +" < r.fromDateTIme AND NOT IN r AND v.type = "+ type + " AND v.location = " + location;
+    private String viewNumberOfVehiclesTypeAndLocationAndTime(String type, String location, LocalDateTime pickupDate, LocalDateTime returnDate) {
+        return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city " +
+                "FROM Vehicle v " +
+                "left outer join RENT R on v.VLICENSE = R.VLICENSE " +
+                "where (((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in ( " +
+                "    Select r.VLICENSE " +
+                "    From RENT r " +
+                "    WHERE ((%s < r.FROMDATETIME) OR (%s >r.TODATETIME))))) AND v.VTNAME = '%s' AND v.LOCATION = '%s'",dateTimeToOracle(returnDate),dateTimeToOracle(pickupDate),type,location);
     }
 
-    private String viewNumberOfVehiclesTypeAndInterval(String type, Timestamp pickupDate, Timestamp returnDate) {
-        return "SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v,vtname,v.location,v.city\n" +
-                "FROM Vehicle v, Rent r\n" +
-                "WHERE v.vlicense = r.vlicense AND " + pickupDate.toString() + " > r.toDateTime AND "+ returnDate.toString() +" < r.fromDateTIme AND NOT IN r AND v.type = " + type;
+    private String viewNumberOfVehiclesTypeAndInterval(String type, LocalDateTime pickupDate, LocalDateTime returnDate) {
+        return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city " +
+                "FROM Vehicle v " +
+                "left outer join RENT R on v.VLICENSE = R.VLICENSE " +
+                "where (((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in ( " +
+                "    Select r.VLICENSE " +
+                "    From RENT r " +
+                "    WHERE ((%s < r.FROMDATETIME) OR (%s >r.TODATETIME))))) AND v.VTNAME = '%s'",dateTimeToOracle(returnDate),dateTimeToOracle(pickupDate),type);
     }
 
     private String viewNumberOfVehiclesTypeAndLocation(String type, String location) {
-        return "SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v,vtname,v.location,v.city\n" +
-                "FROM Vehicle v, Rent r\n" +
-                "WHERE v.vlicense = r.vlicense AND NOT IN r AND v.type = " + type + " AND v.location = " + location;
+        return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city\n" +
+                "FROM Vehicle v " +
+                "left outer join RENT R on v.VLICENSE = R.VLICENSE " +
+                "WHERE v.VTNAME = '%s' AND v.location = '%s' And v.VLICENSE is not null AND r.VLICENSE is null",type,location);
     }
 
     private String viewNumberOfVehiclesType(String type) {
-        return "SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v,vtname,v.location,v.city\n" +
-                "FROM Vehicle v, Rent r\n" +
-                "WHERE v.vlicense = r.vlicense AND NOT IN r AND v.type = " + type;
+        return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city " +
+                "FROM Vehicle v " +
+                "left outer join RENT R on v.VLICENSE = R.VLICENSE " +
+                "WHERE v.VTNAME = '%s' And v.VLICENSE is not null AND r.VLICENSE is null",type);
     }
 
     private String viewNumberOfVehiclesLocationOnly(String location) {
-        return "SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v,vtname,v.location,v.city\n" +
-                "FROM Vehicle v, Rent r\n" +
-                "WHERE v.vlicense = r.vlicense AND NOT IN r AND v.location = " + location;
+        return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city " +
+                "FROM Vehicle v " +
+                "left outer join RENT R on v.VLICENSE = R.VLICENSE " +
+                "WHERE v.LOCATION = '%s' And v.VLICENSE is not null AND r.VLICENSE is null",location);
     }
 
-    private String viewNumberOfVehiclesLocationAndInterval(String location, Timestamp pickupDate, Timestamp returnDate) {
-        return "SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v,vtname,v.location,v.city\n" +
-                "FROM Vehicle v, Rent r\n" +
-                "WHERE v.vlicense = r.vlicense AND " + pickupDate.toString() + " > r.toDateTime AND " + returnDate.toString() + " < r.fromDateTIme AND v.location = " + location;
+    private String viewNumberOfVehiclesLocationAndInterval(String location, LocalDateTime pickupDate, LocalDateTime returnDate) {
+        return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city \n" +
+                "FROM Vehicle v left outer join RENT R on v.VLICENSE = R.VLICENSE  " +
+                "where ((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in ( " +
+                "     Select r.VLICENSE " +
+                "From RENT r " +
+                " WHERE (( %s < r.FROMDATETIME) OR ( %s > r.TODATETIME)))) " +
+                "  AND v.LOCATION = '%s'",dateTimeToOracle(returnDate),dateTimeToOracle(pickupDate),location);
     }
 
-    private String viewNumberOfVehiclesTimeIntervalOnly(Timestamp pickupDate, Timestamp returnDate) {
-        // TODO verify date bounds used for all interval queries
+    private String viewNumberOfVehiclesTimeIntervalOnly(LocalDateTime pickupDate, LocalDateTime returnDate) {
+        return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city " +
+                "FROM Vehicle v " +
+                "left outer join RENT R on v.VLICENSE = R.VLICENSE " +
+                "where ((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in ( " +
+                "    Select r.VLICENSE " +
+                "    From RENT r " +
+                "    WHERE (( %s < r.FROMDATETIME) OR ( %s > r.TODATETIME))))",dateTimeToOracle(returnDate),dateTimeToOracle(pickupDate));
 
-        return "SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v,vtname,v.location,v.city\n" +
-                "FROM Vehicle v, Rent r\n" +
-                "WHERE v.vlicense = r.vlicense AND " + pickupDate.toString() + " > r.toDateTime AND " + returnDate.toString() + " < r.fromDateTIme\n";
     }
 
     private String viewNumberOfVehiclesBranchOnly(String location, String city) {
-        return "SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v,vtname,v.location,v.city\n" +
-                "FROM Vehicle v, Branch b, Rent r\n" +
-                "WHERE v.location = b.location AND v.city = b.city AND b.city = " + city + " AND b.location = " + location + " AND r.vlicense = v.vlicense AND NOT IN(r)\n" +
-                "Group by v.make";
+        return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city " +
+                "FROM Vehicle v " +
+                "left outer join RENT R on v.VLICENSE = R.VLICENSE " +
+                "WHERE v.LOCATION = '%s' AND v.CITY = '%s' AND v.VLICENSE is not null AND r.VLICENSE is null " +
+                "Order by v.MAKE",location,city);
     }
 
-    public int countTuples(ResultSet results, String tableName) throws SQLException {
+    public int countTuples(String tableName) throws SQLException {
         Statement state = db.connection.createStatement();
         ResultSet count = state.executeQuery("SELECT DISTINCT Count(*) as C FROM " + tableName);
         count.next();
         return count.getInt("C");
     }
 
+    public int countTuples(ResultSet results) throws SQLException {
+        int count = 0;
+        while(results.next()) {
+            count++;
+        }
+        return count;
+    }
 
     /*
     Make a reservation. If a customer is new, add the customer’s details to the database.
@@ -169,9 +203,9 @@ If the customer’s desired vehicle is not available, an appropriate error messa
 be shown.
      */
 
-    public boolean makeReservationCheck(int driversLicense,String location,String vehicleType, Timestamp pickupDate, Timestamp returnDate,Branch branch) throws SQLException {
+    public boolean makeReservationCheck(int driversLicense,String location,String vehicleType, LocalDateTime pickupDate, LocalDateTime returnDate,Branch branch) throws SQLException {
         int hits = viewNumberOfVehicles(vehicleType,location,pickupDate,returnDate,branch);
-        if (checkForExistingCustomer(driversLicense) & hits>0) { //vehicle exists
+        if (hits>0) { //vehicle exists
             if(!checkForExistingCustomer(driversLicense)) {
                 createNewCustomer();
             }
@@ -181,11 +215,17 @@ be shown.
         }
     }
 
-    public void makeReservation(int confirmationNumber,String vehicleTypeName ,int driversLicense, Timestamp fromDateTime,Timestamp toDateTime) throws SQLException {
-        String statement = "INSERT INTO Reservation VALUES (" + confirmationNumber + "," + vehicleTypeName + "," +driversLicense + "," +  fromDateTime + "," + toDateTime + ")";
-        PreparedStatement ps = db.connection.prepareStatement(statement);
-        ps.executeUpdate();
-        db.connection.commit();
+    public int makeReservation(String vehicleTypeName ,int driversLicense,String location, LocalDateTime fromDateTime,LocalDateTime toDateTime, Branch branch) throws SQLException {
+        int confirmationNumber = Math.abs((int)System.currentTimeMillis());
+        if (makeReservationCheck(driversLicense,location,vehicleTypeName,fromDateTime,toDateTime,branch)) {
+            String statement = "INSERT INTO Reservation VALUES (" + confirmationNumber + ",'" + vehicleTypeName + "'," + driversLicense + "," + dateTimeToOracle(fromDateTime) + "," + dateTimeToOracle(toDateTime) + ")";
+            PreparedStatement ps = db.connection.prepareStatement(statement);
+            ps.executeUpdate();
+            db.connection.commit();
+            return confirmationNumber;
+        } else {
+            return -1; //used to display error if vehicle is not available
+        }
     }
 
     //if customer checks to see if customer is in database
@@ -203,6 +243,14 @@ be shown.
         return true;
     }
 
+    private String dateTimeToOracle(LocalDateTime d) {
+        //TO_TIMESTAMP('2019-12-25 08:15:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF')
+        StringBuilder output = new StringBuilder();
+        output.append("TO_TIMESTAMP(");
+        output.append("'" + d.getYear() + "-" + d.getMonthValue() + "-" + d.getDayOfMonth() + " " +  d.getHour() + ":" +  d.getMinute() + ":" + d.getSecond() +".000000'");
+        output.append(", 'YYYY-MM-DD HH24:MI:SS.FF')");
+        return output.toString();
+    }
 
     private void createNewCustomer() throws SQLException {
         Customer c = new Customer();
@@ -211,13 +259,13 @@ be shown.
         createNewCustomer(c);
     }
 
-    private void createNewCustomer(Customer c) throws SQLException {
-        String orderedValues = c.getCellphone() + "," + c.getName() + "," + c.getAddress() + "," + c.getDlicense();
+    public void createNewCustomer(Customer c) throws SQLException {
+        String orderedValues = "'" + c.getCellphone() + "','" + c.getName() + "','" + c.getAddress() + "','" + c.getDlicense() + "'";
         String statement = "INSERT INTO Customer VALUES (" + orderedValues + ")";
         PreparedStatement ps = db.connection.prepareStatement(statement);
         ps.executeUpdate();
         db.connection.commit();
     }
-    
+
 }
 

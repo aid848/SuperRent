@@ -1,5 +1,5 @@
 create table Customer(
-cellphone INTEGER,
+cellphone LONG,
 name varchar(30),
 address varchar(60),
 dlicense INTEGER,

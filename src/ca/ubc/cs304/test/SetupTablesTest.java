@@ -2,8 +2,6 @@ package ca.ubc.cs304.test;
 
 import ca.ubc.cs304.database.DatabaseConnectionHandler;
 
-import java.io.FileNotFoundException;
-
 /* I'm just checking to see if the tables show up in the database*/
 
 
@@ -16,7 +14,7 @@ public class SetupTablesTest {
         db.login(username,password);
         try {
             db.firstTimeSetup();
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

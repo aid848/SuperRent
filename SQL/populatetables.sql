@@ -23,3 +23,13 @@ insert into vehicle values (4, 444555, 'Ford', 'Ranger', 2002, 'Blue', 50000, 'M
 insert into vehicle values (5, 555666, 'Tesla', 'Model 3', 2019, 'Black', 10000, 'Available', 'Economy', 'Bad Rentals', 'Maple Ridge');
 insert into vehicle values (6, 666777, 'Dodge', 'Charger', 2017, 'Black', 10000, 'Available', 'Standard', 'Bad Rentals', 'Maple Ridge');
 insert into vehicle values (7, 777888, 'Chevrolet', 'Equinox', 2019, 'Black', 1000, 'Available', 'SUV', 'Bad Rentals', 'Maple Ridge');
+
+insert into RESERVATION values (1234, 'Truck', 2, TO_TIMESTAMP('2019-11-20 10:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'), TO_TIMESTAMP('2019-12-25 08:15:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'));
+insert into RESERVATION values (1235, 'Economy', 3, TO_TIMESTAMP('2019-12-01 12:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'), TO_TIMESTAMP('2019-12-30 10:30:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'));
+insert into RESERVATION values (1236, 'Compact', 4, TO_TIMESTAMP('2019-10-25 12:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'), TO_TIMESTAMP('2020-01-15 15:30:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'));
+insert into RESERVATION values (1237, 'SUV', 1, TO_TIMESTAMP('2019-11-25 12:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'), TO_TIMESTAMP('2020-11-26 12:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'));
+
+insert into RENT values (1, 111222, 4, TO_TIMESTAMP('2019-12-01 12:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'), TO_TIMESTAMP('2019-12-25 10:30:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'), 200000, 'Frank', 1234567812345678, TO_DATE('2022-06-05', 'YYYY-MM-DD'), 1235);
+
+
+insert into RENT values (2,555666,1,TO_TIMESTAMP('2019-11-25 12:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'),TO_TIMESTAMP('2019-11-26 12:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'),9293.32,'Tom',192304,TO_DATE('2020-06-05', 'YYYY-MM-DD'),1236);
