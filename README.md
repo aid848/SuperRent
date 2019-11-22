@@ -122,3 +122,21 @@ We are not expecting a complicated GUI; the bulk of your effort should be concen
 implementing functionality, not the user interface. The goal of the project is to give you some 
 experience with SQL, programming something that interacts with a database, and 
 understanding how to structure your classes to work with GUI components. 
+
+
+handle errors:
+* Daily Rentals for a branch that does not exist 
+• Daily Returns for a branch that does not exist 
+• Returning a non-rented vehicle 
+• Returning a rented vehicle twice once after another 
+• Renting an already rented vehicle 
+• Entering the details of the same vehicle twice 
+• Renting a vehicle as an existing customer 
+• Renting a vehicle as a new customer 
+• Reserving a vehicle that does not exist or is unavailable 
+• Completing a reservation without all the required information 
+• Searching for a reservation with the wrong confirmation number 
+• Viewing available vehicles during a time period that does not make sense (e.g., if 
+I try to view available vehicles during the 1700s, what should happen? Each team 
+can choose a reasonable way to handle this including showing an error message 
+that the time period is not valid, showing an empty list, etc.) 
