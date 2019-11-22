@@ -8,6 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class Reports {
@@ -31,13 +32,13 @@ public class Reports {
     returns vehicle information on all the vehicles rented out during the day, ordered by Branch and Vehicle Type as HashMap<BRANCH, List<VEHICLE>>
     if no branch is given returns data for all branches, else for just the given branch.
     */
-    public HashMap<String, List<VehicleModel>> reportRentedVehicleInfo(String date, String city, String location) {
-        HashMap<String, List<VehicleModel>> result = new HashMap<String, List<VehicleModel>>();
+    public LinkedHashMap<String, List<VehicleModel>> reportRentedVehicleInfo(String date, String city, String location) {
+        LinkedHashMap<String, List<VehicleModel>> result = new LinkedHashMap<String, List<VehicleModel>>();
         try {
             String sql = "";
             PreparedStatement stmt;
             java.sql.Date[] dates = getDates(date);
-            if (city == null && location == null){
+            if (city == null && location == null) {
                 sql = "select BRANCH.location, BRANCH.city, VEHICLE.vtname, VEHICLE.VID, VEHICLE.VLICENSE, VEHICLE.MAKE, VEHICLE.MODEL, VEHICLE.YEAR, VEHICLE.COLOR, VEHICLE.ODOMETER, VEHICLE.STATUS" +
                         "  from BRANCH,RENT,VEHICLE" +
                         "  where RENT.FROMDATETIME between " + '?' + " and " + '?' +
@@ -49,7 +50,7 @@ public class Reports {
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
                 stmt.setDate(2, dates[1]);
-            }else{
+            } else {
                 sql = "select BRANCH.location, BRANCH.city, VEHICLE.vtname, VEHICLE.VID, VEHICLE.VLICENSE, VEHICLE.MAKE, VEHICLE.MODEL, VEHICLE.YEAR, VEHICLE.COLOR, VEHICLE.ODOMETER, VEHICLE.STATUS" +
                         "  from BRANCH,RENT,VEHICLE" +
                         "  where RENT.FROMDATETIME between " + '?' + " and " + '?' +
@@ -83,7 +84,7 @@ public class Reports {
                         rs.getString("location"),
                         rs.getString("city"));
 
-                String key = model.getCity() + ":" + model.getLocation() + ":" + model.getVtname();
+                String key = model.getCity() + " : " + model.getLocation() + " : " + model.getVtname();
                 if (result.containsKey(key)) {
                     result.get(key).add(model);
                 } else {
@@ -100,7 +101,8 @@ public class Reports {
         }
         return result;
     }
-    public HashMap<String, List<VehicleModel>> reportRentedVehicleInfo(String date){
+
+    public LinkedHashMap<String, List<VehicleModel>> reportRentedVehicleInfo(String date) {
         return reportRentedVehicleInfo(date, null, null);
     }
 
@@ -108,8 +110,8 @@ public class Reports {
     returns the number of vehicles rented per vehicle category as HashMap<VTYPE, NUM RENTED> on given date
     if no branch is given returns data for all branches, else for just the given branch.
     */
-    public HashMap<String, Integer> reportNumRentalsPerCategory(String date, String city, String location) {
-        HashMap<String, Integer> result = new HashMap<String, Integer>();
+    public LinkedHashMap<String, Integer> reportNumRentalsPerCategory(String date, String city, String location) {
+        LinkedHashMap<String, Integer> result = new LinkedHashMap<String, Integer>();
 
         try {
             String sql = "";
@@ -129,7 +131,7 @@ public class Reports {
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
                 stmt.setDate(2, dates[1]);
-            }else{
+            } else {
                 sql = "select VEHICLE.vtname, Count(Vehicle.vtname)" +
                         "  from BRANCH,RENT,VEHICLE" +
                         "  where RENT.FROMDATETIME between " + '?' + " and " + '?' +
@@ -167,12 +169,13 @@ public class Reports {
         return result;
 
     }
+
     /* (3)
     returns the number of vehicles rented per branch as HashMap<BRANCH, NUM RENTED> on given date
     if no branch is given returns data for all branches, else for just the given branch.
     */
-    public HashMap<String, Integer> reportNumRentalsPerBranch(String date, String city, String location) {
-        HashMap<String, Integer> result = new HashMap<String, Integer>();
+    public LinkedHashMap<String, Integer> reportNumRentalsPerBranch(String date, String city, String location) {
+        LinkedHashMap<String, Integer> result = new LinkedHashMap<String, Integer>();
 
         try {
             String sql = "";
@@ -186,12 +189,13 @@ public class Reports {
                         "  AND Rent.VLICENSE = VEHICLE.VLICENSE" +
                         "  AND VEHICLE.LOCATION = BRANCH.LOCATION" +
                         "  AND VEHICLE.CITY = BRANCH.CITY" +
-                        "  group by VEHICLE.LOCATION, VEHICLE.CITY";
+                        "  group by VEHICLE.LOCATION, VEHICLE.CITY" +
+                        "  order by VEHICLE.CITY, VEHICLE.LOCATION";
 
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
                 stmt.setDate(2, dates[1]);
-            }else{
+            } else {
                 sql = "select VEHICLE.LOCATION, VEHICLE.CITY, Count(Vehicle.VLICENSE)" +
                         "  from BRANCH,RENT,VEHICLE" +
                         "  where RENT.FROMDATETIME between " + '?' + " and " + '?' +
@@ -200,7 +204,8 @@ public class Reports {
                         "  AND VEHICLE.CITY = BRANCH.CITY" +
                         "  AND BRANCH.CITY = ?" +
                         "  AND BRANCH.LOCATION = ?" +
-                        "  group by VEHICLE.LOCATION, VEHICLE.CITY";
+                        "  group by VEHICLE.LOCATION, VEHICLE.CITY" +
+                        "  order by VEHICLE.CITY, VEHICLE.LOCATION";
 
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
@@ -215,7 +220,7 @@ public class Reports {
                 String citycol = rs.getString("city");
                 String locationcol = rs.getString("location");
 
-                String key = citycol + ":" + locationcol;
+                String key = citycol + " : " + locationcol;
                 result.put(key, rs.getInt(3));
 
             }
@@ -251,7 +256,7 @@ public class Reports {
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
                 stmt.setDate(2, dates[1]);
-            }else{
+            } else {
                 sql = "select Count(VEHICLE.vlicense)" +
                         "  from BRANCH,RENT,VEHICLE" +
                         "  where RENT.FROMDATETIME between " + '?' + " and " + '?' +
@@ -287,11 +292,11 @@ public class Reports {
     //          string branch.city
     //          string branch.location
     //returns a formatted daily rental report for a single branch as a string
-    public String generateDailyRentalReport(String date, String city, String location){
+    public String generateDailyRentalReport(String date, String city, String location) {
         String result = "";
         result += "==========DAILY RENTAL REPORT========== \n";
 
-        HashMap<String, List<VehicleModel>> map = reportRentedVehicleInfo(date, city, location);
+        LinkedHashMap<String, List<VehicleModel>> map = reportRentedVehicleInfo(date, city, location);
         Object[] keys = map.keySet().toArray();
         for (int i = 0; i < keys.length; i++) {
             result += keys[i] + "\n";
@@ -301,7 +306,7 @@ public class Reports {
             result += "========================================\n";
         }
 
-        HashMap<String, Integer> map2 = reportNumRentalsPerCategory(date, city, location);
+        LinkedHashMap<String, Integer> map2 = reportNumRentalsPerCategory(date, city, location);
         Object[] keys2 = map2.keySet().toArray();
         for (int i = 0; i < keys2.length; i++) {
             result += keys2[i] + "\n";
@@ -309,7 +314,7 @@ public class Reports {
             result += "========================================\n";
         }
 
-        HashMap<String, Integer> map3 = reportNumRentalsPerBranch(date, city, location);
+        LinkedHashMap<String, Integer> map3 = reportNumRentalsPerBranch(date, city, location);
         Object[] keys3 = map3.keySet().toArray();
         for (int i = 0; i < keys3.length; i++) {
             result += keys3[i] + "\n";
@@ -325,7 +330,7 @@ public class Reports {
 
     //input:    string date as 'YYYY-MM-DD'
     //returns a formatted daily rental report for the whole company
-    public String generateDailyRentalReport(String date){
+    public String generateDailyRentalReport(String date) {
         return generateDailyRentalReport(date, null, null);
     }
 
@@ -343,13 +348,13 @@ public class Reports {
     returns vehicle information on all the vehicles returned during the day, ordered by Branch and Vehicle Type as HashMap<BRANCH, List<VEHICLE>>
     if no branch is given returns data for all branches, else for just the given branch.
     */
-    public HashMap<String, List<VehicleModel>> reportReturnedVehicleInfo(String date, String city, String location) {
-        HashMap<String, List<VehicleModel>> result = new HashMap<String, List<VehicleModel>>();
+    public LinkedHashMap<String, List<VehicleModel>> reportReturnedVehicleInfo(String date, String city, String location) {
+        LinkedHashMap<String, List<VehicleModel>> result = new LinkedHashMap<String, List<VehicleModel>>();
         try {
             String sql;
             PreparedStatement stmt;
             java.sql.Date[] dates = getDates(date);
-            if (city == null && location == null){
+            if (city == null && location == null) {
                 sql = "select BRANCH.location, BRANCH.city, VEHICLE.vtname, VEHICLE.VID, VEHICLE.VLICENSE, VEHICLE.MAKE, VEHICLE.MODEL, VEHICLE.YEAR, VEHICLE.COLOR, VEHICLE.ODOMETER, VEHICLE.STATUS" +
                         "  from BRANCH,RENT,VEHICLE, RETURN" +
                         "  where RETURN.RETURNDATETIME between " + '?' + " and " + '?' +
@@ -362,7 +367,7 @@ public class Reports {
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
                 stmt.setDate(2, dates[1]);
-            }else{
+            } else {
                 sql = "select BRANCH.location, BRANCH.city, VEHICLE.vtname, VEHICLE.VID, VEHICLE.VLICENSE, VEHICLE.MAKE, VEHICLE.MODEL, VEHICLE.YEAR, VEHICLE.COLOR, VEHICLE.ODOMETER, VEHICLE.STATUS" +
                         "  from BRANCH,RENT,VEHICLE, RETURN" +
                         "  where RETURN.RETURNDATETIME between " + '?' + " and " + '?' +
@@ -397,7 +402,7 @@ public class Reports {
                         rs.getString("location"),
                         rs.getString("city"));
 
-                String key = model.getCity() + ":" + model.getLocation() + ":" + model.getVtname();
+                String key = model.getCity() + " : " + model.getLocation() + " : " + model.getVtname();
                 if (result.containsKey(key)) {
                     result.get(key).add(model);
                 } else {
@@ -419,8 +424,8 @@ public class Reports {
     returns the number of vehicles returned and revenue per vehicle category as HashMap<VTYPE, [NUM RENTED, REVENUE]> on given date
     if no branch is given returns data for all branches, else for just the given branch.
     */
-    public HashMap<String, Integer[]> reportNumReturnedPerCategory(String date, String city, String location) {
-        HashMap<String, Integer[]> result = new HashMap<String, Integer[]>();
+    public LinkedHashMap<String, Integer[]> reportNumReturnedPerCategory(String date, String city, String location) {
+        LinkedHashMap<String, Integer[]> result = new LinkedHashMap<String, Integer[]>();
 
         try {
             String sql;
@@ -441,7 +446,7 @@ public class Reports {
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
                 stmt.setDate(2, dates[1]);
-            }else{
+            } else {
                 sql = "select VEHICLE.vtname, Count(Vehicle.vtname), SUM(RETURN.VALUE)" +
                         "  from BRANCH,RENT,VEHICLE, RETURN" +
                         "  where RETURN.RETURNDATETIME between " + '?' + " and " + '?' +
@@ -465,7 +470,7 @@ public class Reports {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                Integer [] resultList = new Integer[2];
+                Integer[] resultList = new Integer[2];
                 String vtname = rs.getString("vtname");
 
                 String key = vtname;
@@ -488,8 +493,8 @@ public class Reports {
     returns the number of vehicles returned and revenue per branch as HashMap<BRANCH, [NUM RENTED, REVENUE}> on given date
     if no branch is given returns data for all branches, else for just the given branch.
     */
-    public HashMap<String, Integer[]> reportNumReturnedPerBranch(String date, String city, String location) {
-        HashMap<String, Integer[]> result = new HashMap<String, Integer[]>();
+    public LinkedHashMap<String, Integer[]> reportNumReturnedPerBranch(String date, String city, String location) {
+        LinkedHashMap<String, Integer[]> result = new LinkedHashMap<String, Integer[]>();
 
         try {
             String sql;
@@ -504,12 +509,13 @@ public class Reports {
                         "  AND VEHICLE.LOCATION = BRANCH.LOCATION" +
                         "  AND VEHICLE.CITY = BRANCH.CITY" +
                         "  AND RENT.RID = RETURN.RID" +
-                        "  group by VEHICLE.LOCATION, VEHICLE.CITY";
+                        "  group by VEHICLE.LOCATION, VEHICLE.CITY" +
+                        "  order by VEHICLE.CITY, VEHICLE.LOCATION";
 
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
                 stmt.setDate(2, dates[1]);
-            }else{
+            } else {
                 sql = "select VEHICLE.LOCATION, VEHICLE.CITY, Count(Vehicle.VLICENSE), SUM(RETURN.VALUE)" +
                         "  from BRANCH,RENT,VEHICLE, RETURN" +
                         "  where RETURN.RETURNDATETIME between " + '?' + " and " + '?' +
@@ -519,7 +525,8 @@ public class Reports {
                         "  AND VEHICLE.CITY = BRANCH.CITY" +
                         "  AND BRANCH.CITY = ?" +
                         "  AND BRANCH.LOCATION = ?" +
-                        "  group by VEHICLE.LOCATION, VEHICLE.CITY";
+                        "  group by VEHICLE.LOCATION, VEHICLE.CITY" +
+                        "  order by VEHICLE.CITY, VEHICLE.LOCATION";
 
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
@@ -530,11 +537,11 @@ public class Reports {
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                Integer [] resultList = new Integer[2];
+                Integer[] resultList = new Integer[2];
                 String citycol = rs.getString("city");
                 String locationcol = rs.getString("location");
 
-                String key = citycol + ":" + locationcol;
+                String key = citycol + " : " + locationcol;
                 resultList[0] = rs.getInt(3);
                 resultList[1] = rs.getInt(4);
                 result.put(key, resultList);
@@ -554,7 +561,7 @@ public class Reports {
     if given a Branch, gives num returns and revenue just for that Branch
     */
     public Integer[] reportNumReturned(String date, String city, String location) {
-        Integer [] resultList = new Integer[2];
+        Integer[] resultList = new Integer[2];
 
         try {
             String sql = "";
@@ -573,7 +580,7 @@ public class Reports {
                 stmt = db.connection.prepareStatement(sql);
                 stmt.setDate(1, dates[0]);
                 stmt.setDate(2, dates[1]);
-            }else{
+            } else {
                 sql = "select Count(VEHICLE.vlicense), SUM(RETURN.VALUE)" +
                         "  from BRANCH,RENT,VEHICLE, RETURN" +
                         "  where RETURN.RETURNDATETIME  between " + '?' + " and " + '?' +
@@ -608,12 +615,11 @@ public class Reports {
     }
 
 
-
     //input:    string date as 'YYYY-MM-DD'
     //          string branch.city
     //          string branch.location
     //returns a formatted daily returns report for a single branch as a string
-    public String generateDailyReturnReport(String date, String city, String location){
+    public String generateDailyReturnReport(String date, String city, String location) {
         String result = "";
         result += "==========DAILY RETURNS REPORT========== \n";
         HashMap<String, List<VehicleModel>> map = reportReturnedVehicleInfo(date, city, location);
@@ -626,7 +632,7 @@ public class Reports {
             result += "========================================\n";
         }
 
-        HashMap<String, Integer[]> map2 = reportNumReturnedPerCategory(date, city, location);
+        LinkedHashMap<String, Integer[]> map2 = reportNumReturnedPerCategory(date, city, location);
         Object[] keys2 = map2.keySet().toArray();
         for (int i = 0; i < keys2.length; i++) {
             result += keys2[i] + "\n";
@@ -635,7 +641,7 @@ public class Reports {
             result += "========================================\n";
         }
 
-        HashMap<String, Integer[]> map3 = reportNumReturnedPerBranch(date, city, location);
+        LinkedHashMap<String, Integer[]> map3 = reportNumReturnedPerBranch(date, city, location);
         Object[] keys3 = map3.keySet().toArray();
         for (int i = 0; i < keys3.length; i++) {
             result += keys3[i] + "\n";
@@ -654,7 +660,7 @@ public class Reports {
 
     //input:    string date as 'YYYY-MM-DD'
     //returns a formatted daily returns report for the whole company
-    public String generateDailyReturnReport(String date){
+    public String generateDailyReturnReport(String date) {
         return generateDailyReturnReport(date, null, null);
     }
 
