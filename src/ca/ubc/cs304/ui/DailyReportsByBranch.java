@@ -6,6 +6,8 @@ import ca.ubc.cs304.database.DatabaseConnectionHandler;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class DailyReportsByBranch extends JFrame {
     private JTextField dateField;
@@ -20,7 +22,7 @@ public class DailyReportsByBranch extends JFrame {
         super("Daily Reports By Branch");
         this.setContentPane(rootPanel);
         this.pack();
-        this.setSize(500,500);
+        this.setSize(600,600);
         this.setLocationRelativeTo(null);
         rentalsReportButton.addActionListener(new ActionListener() {
             @Override
@@ -34,7 +36,8 @@ public class DailyReportsByBranch extends JFrame {
                     String result = reports.generateDailyRentalReport(date, city, location);
                     textArea1.setText(result);
                 }catch(Exception f){
-                    System.out.println("error");
+                    textArea1.setText(f.getMessage());
+                    f.printStackTrace();
                 }
             }
         });
@@ -50,7 +53,8 @@ public class DailyReportsByBranch extends JFrame {
                     String result = reports.generateDailyReturnReport(date, city, location);
                     textArea1.setText(result);
                 }catch (Exception f){
-                    System.out.println("error");
+                    textArea1.setText(f.getMessage());
+                    f.printStackTrace();
                 }
             }
         });
@@ -58,12 +62,10 @@ public class DailyReportsByBranch extends JFrame {
 
     private void validateFields(String date, String city, String location) throws Exception{
         if (date.equals("") || city.equals("") || location.equals("")) {
-            textArea1.setText("Error: Empty Field(s)");
-            throw new Exception();
+            throw new Exception("Error: Empty Field(s)");
         }
         if (!date.matches("([0-9]{4})-([0-9]{2})-([0-9]{2})")){
-            textArea1.setText("Error: Invalid Date");
-            throw new Exception();
+            throw new Exception("Error: Invalid Date");
         }
     }
 }
