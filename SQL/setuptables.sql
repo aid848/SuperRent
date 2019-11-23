@@ -17,12 +17,12 @@ krate float,
 PRIMARY KEY (vtname));
 
 CREATE TABLE Reservation(
-confNo INTEGER,
+rID INTEGER,
 vtname    varchar(30),
 dlicense INTEGER,
 fromDateTime  timestamp,
 toDateTime    timestamp,
-PRIMARY KEY (confNo),
+PRIMARY KEY (rID),
 foreign key (vtname) REFERENCES VehicleType,
 foreign key (dlicense) REFERENCES Customer);
 

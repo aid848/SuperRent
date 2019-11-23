@@ -2,20 +2,19 @@ package ca.ubc.cs304.test;
 
 import ca.ubc.cs304.controller.Clerk;
 import ca.ubc.cs304.database.DatabaseConnectionHandler;
-import ca.ubc.cs304.model.Card;
-import ca.ubc.cs304.model.Reservation;
-import ca.ubc.cs304.model.Vehicle;
+import ca.ubc.cs304.model.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -28,15 +27,50 @@ public class ClerkTest {
     private Reservation reservation;
     private Card card;
     private Vehicle vehicle;
+    private Return ret;
 
     @Before
     public void setup() {
         db = new DatabaseConnectionHandler();
         db.login("ora_eatnow", "a31745136");
         clerk = new Clerk(db);
+        try {
+            firstTimeSetup(1);
+            firstTimeSetup(2);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         createReservation();
         createCard();
         createVehicle();
+        createReturn();
+    }
+
+    public void firstTimeSetup(int stage) throws FileNotFoundException {
+        String path;
+        if(stage == 1) {
+            path = "setuptables.sql";
+        } else if (stage == 2) {
+            path = "populatetables.sql";
+        }else {
+            path = "droptables.sql";
+        }
+        ArrayList<String> statements = new ArrayList<String>();
+        try {
+            Scanner in = new Scanner(new File("SQL\\" + path));
+            in.useDelimiter(";");
+            while (in.hasNext())
+                statements.add(in.next());
+            for (String statement: statements) {
+                PreparedStatement p = db.connection.prepareStatement(statement);
+                p.executeUpdate();
+                db.connection.commit();
+                p.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void createVehicle() {
@@ -82,8 +116,25 @@ public class ClerkTest {
         reservation.setvTName("Truck");
     }
 
+    private void createReturn() {
+        long returnDate = LocalDateTime.parse("2019-12-30 12:15:00", DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss"))
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
+        ret = new Return();
+        ret.setrID(1);
+        ret.setReturnDateTime(new Timestamp(returnDate));
+        ret.setOdometer(250000);
+        ret.setFulltank(1);
+    }
+
     @After
     public void end() {
+        try {
+            firstTimeSetup(3);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         db.close();
     }
 
@@ -103,6 +154,23 @@ public class ClerkTest {
             } else {
                 fail("Should have one tuple");
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testGetReturnReceipt() {
+        try {
+            ReturnReceipt result = clerk.returnVehicle(ret);
+            System.out.println(result.getrID());
+            System.out.println(result.getRentalDate());
+            System.out.println(result.getReturnDate());
+            System.out.println(result.getElapsedWeeks());
+            System.out.println(result.getElapsedDays());
+            System.out.println(result.getElapsedHours());
+
         } catch (SQLException e) {
             e.printStackTrace();
             fail();

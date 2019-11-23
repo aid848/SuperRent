@@ -1,15 +1,13 @@
 package ca.ubc.cs304.controller;
 
 import ca.ubc.cs304.database.DatabaseConnectionHandler;
-import ca.ubc.cs304.model.Card;
-import ca.ubc.cs304.model.Reservation;
-import ca.ubc.cs304.model.Vehicle;
+import ca.ubc.cs304.model.*;
 
 import java.sql.*;
 import java.util.Calendar;
 
 public class Clerk {
-    DatabaseConnectionHandler db;
+    private DatabaseConnectionHandler db;
 
     public Clerk(DatabaseConnectionHandler db) {
         this.db = db;
@@ -42,6 +40,89 @@ public class Clerk {
         // change vehicle's status to "Rented"
         setVehicleStatusToRented(vehicle);
         return getRentTuple(rID);
+    }
+
+    public ReturnReceipt returnVehicle(Return ret) throws SQLException {
+//        // check if vehicle is a rental
+//        PreparedStatement statement = db.connection.prepareStatement("SELECT * FROM RENT WHERE RID = ?");
+//        statement.setInt(1, ret.getrID());
+//        ResultSet result = statement.executeQuery();
+//        statement.close();
+//        if (!result.next()) {
+//            throw new IllegalArgumentException("Vehicle was not previously rented");
+//        }
+//
+        // calculate total cost of rental
+        // get vehicle type associated with rental to access rates
+        PreparedStatement s = db.connection.prepareStatement("SELECT r1.RID, r1.FROMDATETIME, vt.WRATE, vt.DRATE, vt.HRATE, vt.DIRATE, vt.HIRATE, vt.KRATE\n" +
+                "FROM Rent r1, VEHICLE v, VEHICLETYPE vt WHERE r1.RID = ? AND r1.VLICENSE = v.VLICENSE AND v.VTNAME = vt.VTNAME");
+        s.setInt(1, ret.getrID());
+        ResultSet r = s.executeQuery();
+
+        // build return value
+        ReturnReceipt returnVal = new ReturnReceipt();
+        if (r.next()) {
+            returnVal.setrID(r.getInt(1));
+            returnVal.setRentalDate(r.getTimestamp(2));
+            returnVal.setReturnDate(ret.getReturnDateTime());
+            returnVal.setElapsedWeeks(elapsedWeeks(returnVal.getRentalDate(), returnVal.getReturnDate()));
+            returnVal.setElapsedDays(elapsedDays(returnVal.getRentalDate(), returnVal.getReturnDate()));
+            returnVal.setElapsedHours(elapsedHours(returnVal.getRentalDate(), returnVal.getReturnDate()));
+            returnVal.setWeeklyRate(r.getDouble(3));
+            returnVal.setDailyRate(r.getDouble(4));
+            returnVal.setHourlyRate(r.getDouble(5));
+            returnVal.setDailyInsuranceRate(r.getDouble(6));
+            returnVal.setHourlyInsuranceRate(r.getDouble(7));
+            returnVal.setkRate(r.getDouble(8));
+            returnVal.setTotal(calculateTotalCost(returnVal));
+        } else {
+            throw new IllegalArgumentException("Vehicle was not previously rented");
+        }
+
+        // insert tuple into Return table
+        PreparedStatement i = db.connection.prepareStatement("INSERT INTO RETURN VALUES (?,?,?,?,?)");
+        i.setInt(1, ret.getrID());
+        i.setTimestamp(2, ret.getReturnDateTime());
+        i.setFloat(3, ret.getOdometer());
+        i.setInt(4, ret.getFulltank());
+        i.setDouble(5, returnVal.getTotal());
+        i.executeUpdate();
+        i.close();
+
+        // TODO: set vehicle's status to available
+
+        return returnVal;
+    }
+
+    private double calculateTotalCost(ReturnReceipt r) {
+        double weeklyCost = elapsedWeeks(r.getRentalDate(), r.getReturnDate()) * r.getWeeklyRate();
+        double dailyCost = elapsedDays(r.getRentalDate(), r.getReturnDate()) * (r.getDailyRate() + r.getDailyInsuranceRate());
+        double hourlyCost = elapsedHours(r.getRentalDate(), r.getReturnDate()) * (r.getHourlyRate() + r.getHourlyInsuranceRate());
+        return weeklyCost + dailyCost + hourlyCost;
+    }
+
+    // gets number of weeks elapsed between the given times
+    private int elapsedWeeks(Timestamp from, Timestamp to) {
+        long ms1 = from.getTime();
+        long ms2 = to.getTime();
+        long diff = ms2 - ms1;
+        return (int) (diff / (7 * 24 * 60 * 60 * 1000));
+    }
+
+    // gets remainder of days elapsed between the given times
+    private int elapsedDays(Timestamp from, Timestamp to) {
+        long ms1 = from.getTime();
+        long ms2 = to.getTime();
+        long diff = ms2 - ms1;
+        return ((int) (diff / (24 * 60 * 60 * 1000))) % 7;
+    }
+
+    // gets remainder of hours elapsed between the given times
+    private int elapsedHours(Timestamp from, Timestamp to) {
+        long ms1 = from.getTime();
+        long ms2 = to.getTime();
+        long diff = ms2 - ms1;
+        return ((int) (diff / (60 * 60 * 1000))) % 24;
     }
 
     private ResultSet getRentTuple(int rID) throws SQLException {
