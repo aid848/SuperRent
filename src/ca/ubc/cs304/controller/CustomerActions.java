@@ -3,6 +3,7 @@ package ca.ubc.cs304.controller;
 import ca.ubc.cs304.database.DatabaseConnectionHandler;
 import ca.ubc.cs304.model.Branch;
 import ca.ubc.cs304.model.Customer;
+import ca.ubc.cs304.ui.GuiMain;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,7 +14,6 @@ import java.time.LocalDateTime;
 
 public class CustomerActions {
     //Customer database actions as described in pdf lives here
-
     DatabaseConnectionHandler db;
     ResultSet vehiclesOfInterest; //Used for viewNumberOfVehicles' returned tuples
 
@@ -215,6 +215,18 @@ be shown.
         }
     }
 
+    public boolean makeReservationCheck(GuiMain g,int driversLicense,String location,String vehicleType, LocalDateTime pickupDate, LocalDateTime returnDate,Branch branch) throws SQLException {
+        int hits = viewNumberOfVehicles(vehicleType,location,pickupDate,returnDate,branch);
+        if (hits>0) { //vehicle exists
+            if(!checkForExistingCustomer(driversLicense)) {
+                createNewCustomer(g);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public int makeReservation(String vehicleTypeName ,int driversLicense,String location, LocalDateTime fromDateTime,LocalDateTime toDateTime, Branch branch) throws SQLException {
         int confirmationNumber = Math.abs((int)System.currentTimeMillis());
         if (makeReservationCheck(driversLicense,location,vehicleTypeName,fromDateTime,toDateTime,branch)) {
@@ -252,11 +264,12 @@ be shown.
         return output.toString();
     }
 
-    private void createNewCustomer() throws SQLException {
-        Customer c = new Customer();
-        //TODO hook into gui and prompt for customer details
-        //Customer c = Gui.newCustomerDialogue();
-        createNewCustomer(c);
+    public void createNewCustomer() throws SQLException {
+
+    }
+
+    public void createNewCustomer(GuiMain g) throws SQLException {
+        g.createCustomerWindow();
     }
 
     public void createNewCustomer(Customer c) throws SQLException {
