@@ -1,4 +1,4 @@
-insert into customer values ('5555555555', 'Bob', '12345 123St', 1);
+insert into customer values (555555555, 'Bob', '12345 123St', 1);
 insert into customer values (null, 'Tom', null, 2);
 insert into customer values (null, 'Jerry', null, 3);
 insert into customer values (null, 'Frank', null, 4);

@@ -214,9 +214,7 @@ public class DatabaseConnectionHandler {
 
 	//execute query and return result tuples as formatted string
 	public String executeStringQuery(String stringQuery){
-		ArrayList<String> columnNames = new ArrayList<>();
 		String result = "";
-		Integer maxLength = 0;
 		try {
 			Statement stmt = connection.createStatement();
 			String lowerCase = stringQuery.toLowerCase();
@@ -226,43 +224,9 @@ public class DatabaseConnectionHandler {
 				result = "Executed";
 			}else {
 				ResultSet rs = stmt.executeQuery(stringQuery);
-
-				ResultSetMetaData rsmd = rs.getMetaData();
-
-				for (int i = 0; i < rsmd.getColumnCount(); i++) {
-					columnNames.add(rsmd.getColumnName(i + 1));
-					String columnName = rsmd.getColumnName(i + 1);
-					if (columnName.length() > maxLength) {
-						maxLength = columnName.length();
-					}
-				}
-
-				ArrayList<ArrayList<String>> rows = new ArrayList<>();
-
-				while (rs.next()) {
-					ArrayList<String> tempAttributeList = new ArrayList<>();
-					for (String columnName : columnNames) {
-						String attribute = rs.getObject(columnName).toString();
-						tempAttributeList.add(attribute);
-						if (attribute.length() > maxLength) {
-							maxLength = attribute.length();
-						}
-					}
-					rows.add(tempAttributeList);
-				}
+				result = prettyPrintTuples(rs);
 				rs.close();
 				stmt.close();
-
-				for (String columnName : columnNames) {
-					result += String.format("%1$" + maxLength + "s", columnName) + " | ";
-				}
-				result += "\n";
-				for (ArrayList<String> row : rows) {
-					for (String attribute : row) {
-						result += String.format("%1$" + maxLength + "s", attribute) + " | ";
-					}
-					result += "\n";
-				}
 			}
 
 		} catch (SQLException e) {
@@ -271,9 +235,48 @@ public class DatabaseConnectionHandler {
 		}
 
 		return result;
-
 	}
 
+	public String prettyPrintTuples(ResultSet rs) throws SQLException {
+		ArrayList<String> columnNames = new ArrayList<>();
+		ArrayList<ArrayList<String>> rows = new ArrayList<>();
+		ArrayList<Integer> maxLengths = new ArrayList<>();
+		String result = "";
 
+		ResultSetMetaData rsmd = rs.getMetaData();
+
+		for (int i = 0; i < rsmd.getColumnCount(); i++) {
+			columnNames.add(rsmd.getColumnName(i + 1));
+			String columnName = rsmd.getColumnName(i + 1);
+			maxLengths.add(i, columnName.length());
+		}
+
+		while (rs.next()) {
+			ArrayList<String> tempAttributeList = new ArrayList<>();
+			for (int i = 0; i < columnNames.size(); i++) {
+				String columnName = columnNames.get(i);
+				String attribute = rs.getObject(columnName) == null ? "null" : rs.getObject(columnName).toString();
+				tempAttributeList.add(attribute);
+				if (attribute.length() > maxLengths.get(i)) {
+					maxLengths.set(i, attribute.length());
+				}
+			}
+			rows.add(tempAttributeList);
+		}
+
+		for (int i = 0; i < columnNames.size(); i++) {
+			String columnName = columnNames.get(i);
+			result += String.format("%1$" + maxLengths.get(i) + "s", columnName) + " | ";
+		}
+		result += "\n";
+		for (ArrayList<String> row : rows) {
+			for (int i = 0; i < row.size(); i++) {
+				String attribute = row.get(i);
+				result += String.format("%1$" + maxLengths.get(i) + "s", attribute) + " | ";
+			}
+			result += "\n";
+		}
+		return result;
+	}
 
 }
