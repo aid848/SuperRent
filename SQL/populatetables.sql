@@ -20,6 +20,7 @@ insert into vehicle values (1, 111222, 'Honda', 'Civic', 1990, 'Red', 200000, 'A
 insert into vehicle values (2, 222333, 'Toyota', 'Corolla', 2001, 'Pink', 50000, 'Available', 'Economy', 'Cool Rentals', 'East Vancouver');
 insert into vehicle values (3, 333444, 'Ford', 'F-150', 2007, 'Green', 50000, 'Rented', 'Truck', 'Cool Rentals', 'East Vancouver');
 insert into vehicle values (4, 444555, 'Ford', 'Ranger', 2002, 'Blue', 50000, 'Maintenance', 'Truck', 'Cool Rentals', 'East Vancouver');
+insert into vehicle values (8, 999999, 'Dodge', 'Ram', 2015, 'White', 30000, 'Available', 'Truck', 'Cool Rentals', 'East Vancouver');
 insert into vehicle values (5, 555666, 'Tesla', 'Model 3', 2019, 'Black', 10000, 'Available', 'Economy', 'Bad Rentals', 'Maple Ridge');
 insert into vehicle values (6, 666777, 'Dodge', 'Charger', 2017, 'Black', 10000, 'Available', 'Standard', 'Bad Rentals', 'Maple Ridge');
 insert into vehicle values (7, 777888, 'Chevrolet', 'Equinox', 2019, 'Black', 1000, 'Available', 'SUV', 'Bad Rentals', 'Maple Ridge');

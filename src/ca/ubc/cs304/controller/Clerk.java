@@ -2,6 +2,7 @@ package ca.ubc.cs304.controller;
 
 import ca.ubc.cs304.database.DatabaseConnectionHandler;
 import ca.ubc.cs304.model.*;
+import ca.ubc.cs304.ui.Rent;
 
 import java.sql.*;
 import java.util.Calendar;
@@ -14,8 +15,51 @@ public class Clerk {
         assert (this.db.connection != null);
     }
 
+    // gets first available vehicle of given type
+    public Vehicle getAvailableVehicle(String vehicleType) throws SQLException {
+        PreparedStatement statement = db.connection.prepareStatement("SELECT * FROM VEHICLE WHERE VTNAME = ?");
+        statement.setString(1, vehicleType);
+        ResultSet result = statement.executeQuery();
+        while (result.next()) {
+            if (result.getString("STATUS").equals("Available")) {
+                Vehicle v = new Vehicle();
+                v.setvId(result.getInt("VID"));
+                v.setvLicense(result.getInt("VLICENSE"));
+                v.setMake(result.getString("MAKE"));
+                v.setModel(result.getString("MODEL"));
+                v.setYear(result.getInt("YEAR"));
+                v.setColor(result.getString("COLOR"));
+                v.setOdometer(result.getFloat("ODOMETER"));
+                v.setStatus(result.getString("STATUS"));
+                v.setVTName(result.getString("VTNAME"));
+                v.setLocation(result.getString("LOCATION"));
+                v.setCity(result.getString("CITY"));
+                return v;
+            }
+        }
+        throw new IllegalArgumentException("No vehicles are currently available to rent");
+    }
+
+    // gets Reservation associated with the given reservation confirmation #
+    public Reservation getReservation(int confirmationNumber) throws SQLException {
+        PreparedStatement statement = db.connection.prepareStatement("SELECT * FROM RESERVATION WHERE RID = ?");
+        statement.setInt(1, confirmationNumber);
+        ResultSet result = statement.executeQuery();
+        if (result.next()) {
+            Reservation r = new Reservation();
+            r.setConfNum(result.getInt("RID"));
+            r.setvTName(result.getString("VTNAME"));
+            r.setdLicense(result.getInt("DLICENSE"));
+            r.setPickupDate(result.getTimestamp("FROMDATETIME"));
+            r.setReturnDate(result.getTimestamp("TODATETIME"));
+            return r;
+        } else {
+            throw new IllegalArgumentException("Reservation does not exist");
+        }
+    }
+
     // inserts Rent tuple into Rent table and returns true if the insertion is successful, also changes vehicle status to "Rented"
-    public ResultSet getRentalReceipt(Reservation reservation, Vehicle vehicle, Card card) throws SQLException {
+    public Rental getRentalReceipt(Reservation reservation, Vehicle vehicle, Card card) throws SQLException {
         PreparedStatement statement = db.connection.prepareStatement("INSERT INTO Rent VALUES (?,?,?,?,?,?,?,?,?,?)");
         int rID = reservation.getConfNum() + 1000000;
         statement.setInt(1, rID);
@@ -30,7 +74,7 @@ public class Clerk {
         statement.setInt(10, reservation.getConfNum());
 
         int rows = statement.executeUpdate();
-        // db.connection.commit();
+        db.connection.commit();
         // ResultSet result = statement.getResultSet();
         if (rows != 1) {
             throw new IllegalStateException("Failed to insert Rent tuple");
@@ -39,6 +83,7 @@ public class Clerk {
 
         // change vehicle's status to "Rented"
         setVehicleStatusToRented(vehicle);
+
         return getRentTuple(rID);
     }
 
@@ -87,6 +132,7 @@ public class Clerk {
         i.setInt(4, ret.getFulltank());
         i.setDouble(5, returnVal.getTotal());
         i.executeUpdate();
+        db.connection.commit();
         i.close();
 
         // TODO: set vehicle's status to available
@@ -125,17 +171,34 @@ public class Clerk {
         return ((int) (diff / (60 * 60 * 1000))) % 24;
     }
 
-    private ResultSet getRentTuple(int rID) throws SQLException {
+    private Rental getRentTuple(int rID) throws SQLException {
         PreparedStatement ps = db.connection.prepareStatement("SELECT * FROM RENT WHERE RID = ?");
         ps.setInt(1, rID);
-        return ps.executeQuery();
+        ResultSet result = ps.executeQuery();
+        if (result.next()) {
+            Rental r = new Rental();
+            r.setrId(result.getInt("RID"));
+            r.setvLicense(result.getInt("VLICENSE"));
+            r.setdLicense(result.getInt("DLICENSE"));
+            r.setFromDateTime(result.getTimestamp("FROMDATETIME"));
+            r.setToDateTime(result.getTimestamp("TODATETIME"));
+            r.setOdometer(result.getFloat("ODOMETER"));
+            r.setCardName(result.getString("CARDNAME"));
+            r.setCardNo(result.getLong("CARDNO"));
+            r.setExpDate(result.getDate("EXPDATE"));
+            r.setConfNo(result.getInt("CONFNO"));
+            return r;
+        } else {
+            throw new IllegalArgumentException("Rental with given ID does not exist");
+        }
     }
 
     private boolean setVehicleStatusToRented(Vehicle vehicle) throws SQLException {
-        String query = "UPDATE VEHICLE SET STATUS = 'Reserved'";
-        Statement update = db.connection.createStatement();
-        ResultSet result = update.executeQuery(query);
-        if (result.next()) {
+        PreparedStatement statement = db.connection.prepareStatement("UPDATE VEHICLE SET STATUS = 'Rented' WHERE VLICENSE = ?");
+        statement.setInt(1, vehicle.getvLicense());
+        int result = statement.executeUpdate();
+        db.connection.commit();
+        if (result == 1) {
             return true;
         } else {
             throw new IllegalStateException("Failed to update Vehicle status");

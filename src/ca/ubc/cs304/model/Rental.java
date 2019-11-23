@@ -11,7 +11,7 @@ public class Rental {
     private Timestamp toDateTime;
     private double odometer;
     private String cardName;
-    private int cardNo;
+    private long cardNo;
     private Date expDate;
     private int confNo;
 
@@ -71,11 +71,11 @@ public class Rental {
         this.cardName = cardName;
     }
 
-    public int getCardNo() {
+    public long getCardNo() {
         return cardNo;
     }
 
-    public void setCardNo(int cardNo) {
+    public void setCardNo(long cardNo) {
         this.cardNo = cardNo;
     }
 

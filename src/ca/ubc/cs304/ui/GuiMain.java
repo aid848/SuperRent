@@ -122,9 +122,10 @@ public class GuiMain implements LoginWindowDelegate {
         return null;
     }
 
-    public JFrame createRentVehicleWindow() {
+    public void createRentVehicleWindow() {
         //TODO
-        return null;
+        Rent rent = new Rent(db);
+        rent.setVisible(true);
     }
 
     public JFrame createRentReceiptWindow() {

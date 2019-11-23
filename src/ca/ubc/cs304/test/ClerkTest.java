@@ -141,16 +141,16 @@ public class ClerkTest {
     @Test
     public void testGetReservationReceipt() {
         try {
-            ResultSet result = clerk.getRentalReceipt(reservation, vehicle, card);
-            if (result.next()) {
-                System.out.println(result.getInt(1));
-                System.out.println(result.getInt(2));
-                System.out.println(result.getInt(3));
-                System.out.println(result.getTimestamp(4));
-                System.out.println(result.getTimestamp(5));
-                System.out.println(result.getFloat(6));
-                System.out.println(result.getString(7));
-                System.out.println(result.getLong(8));
+            Rental result = clerk.getRentalReceipt(reservation, vehicle, card);
+            if (result != null) {
+                System.out.println(result.getrId());
+                System.out.println(result.getvLicense());
+                System.out.println(result.getdLicense());
+                System.out.println(result.getFromDateTime());
+                System.out.println(result.getToDateTime());
+                System.out.println(result.getOdometer());
+                System.out.println(result.getCardName());
+                System.out.println(result.getCardNo());
             } else {
                 fail("Should have one tuple");
             }
