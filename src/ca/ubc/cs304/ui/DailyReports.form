@@ -44,7 +44,10 @@
           <component id="8e633" class="javax.swing.JTextArea" binding="textArea1" default-binding="true">
             <constraints/>
             <properties>
+              <enabled value="true"/>
+              <font name="Monospaced"/>
               <lineWrap value="false"/>
+              <text value=""/>
             </properties>
           </component>
         </children>

@@ -294,37 +294,48 @@ public class Reports {
     //returns a formatted daily rental report for a single branch as a string
     public String generateDailyRentalReport(String date, String city, String location) {
         String result = "";
-        result += "==========DAILY RENTAL REPORT========== \n";
+        result += "DAILY RENTAL REPORT===========================================================\n";
 
         LinkedHashMap<String, List<VehicleModel>> map = reportRentedVehicleInfo(date, city, location);
         Object[] keys = map.keySet().toArray();
+        String lastBranch = "";
         for (int i = 0; i < keys.length; i++) {
-            result += keys[i] + "\n";
+            String thisBranch = "VEHICLES RENTED TODAY AT " + keys[i].toString().split(":")[0].toUpperCase() + "." + keys[i].toString().split(":")[1].toUpperCase();
+            if (!lastBranch.equals(thisBranch)){
+                lastBranch = thisBranch;
+                result += "=====================================\n";
+                result += thisBranch + "\n";
+                result += keys[i].toString().split(":")[2] + ":" + "\n";
+            }else{
+                result += keys[i].toString().split(":")[2] + ":" + "\n";
+            }
             List<VehicleModel> vehicles = map.get(keys[i]);
-            for (VehicleModel vehicle : vehicles)
-                result = result + "rented vehicle: " + " | " + vehicle.getVid() + " | " + vehicle.getVlicense() + " | " + vehicle.getMake() + " | " + vehicle.getModel() + " | " + vehicle.getYear() + " | " + vehicle.getColor() + " | " + vehicle.getOdometer() + "\n";
-            result += "========================================\n";
+            for (VehicleModel vehicle : vehicles) {
+                result = result + " | VID." + vehicle.getVid() + " | " + vehicle.getVlicense() + " | " + vehicle.getMake() + " | " + vehicle.getModel() + " | " + vehicle.getYear() + " | " + vehicle.getColor() + " | " + vehicle.getOdometer() + "KM\n";
+            }
         }
+
+        result += "\n==============================================================================\n";
+        result += "# RENTALS PER CATEGORY\n";
 
         LinkedHashMap<String, Integer> map2 = reportNumRentalsPerCategory(date, city, location);
         Object[] keys2 = map2.keySet().toArray();
         for (int i = 0; i < keys2.length; i++) {
-            result += keys2[i] + "\n";
-            result += "num rented today: " + map2.get(keys2[i]) + "\n";
-            result += "========================================\n";
+            result += keys2[i] + ": " + map2.get(keys2[i]) + "\n";
         }
+        result += "\n==============================================================================\n";
+        result += "# RENTALS PER BRANCH\n";
 
         LinkedHashMap<String, Integer> map3 = reportNumRentalsPerBranch(date, city, location);
         Object[] keys3 = map3.keySet().toArray();
         for (int i = 0; i < keys3.length; i++) {
-            result += keys3[i] + "\n";
-            result += "num rented today: " + map3.get(keys3[i]) + "\n";
-            result += "========================================\n";
+            result += keys3[i] + ": " + map3.get(keys3[i]) + "\n";
         }
+        result += "\n==============================================================================\n";
 
         Integer total = reportNumNewRentals(date, city, location);
-        result += "total rented today: " + total + "\n";
-        result += "========================================\n";
+        result += "TOTAL # RENTALS TODAY: " + total + "\n";
+        result += "==============================================================================\n";
         return result;
     }
 
@@ -333,8 +344,6 @@ public class Reports {
     public String generateDailyRentalReport(String date) {
         return generateDailyRentalReport(date, null, null);
     }
-
-
 
     /*
     Daily Returns:
@@ -614,46 +623,56 @@ public class Reports {
         return resultList;
     }
 
-
     //input:    string date as 'YYYY-MM-DD'
     //          string branch.city
     //          string branch.location
     //returns a formatted daily returns report for a single branch as a string
     public String generateDailyReturnReport(String date, String city, String location) {
         String result = "";
-        result += "==========DAILY RETURNS REPORT========== \n";
+        result += "DAILY RETURNS REPORT========================================================= \n";
         HashMap<String, List<VehicleModel>> map = reportReturnedVehicleInfo(date, city, location);
         Object[] keys = map.keySet().toArray();
+        String lastBranch = "";
         for (int i = 0; i < keys.length; i++) {
-            result += keys[i] + "\n";
+            String thisBranch = "VEHICLES RETURNED TODAY AT " + keys[i].toString().split(":")[0].toUpperCase() + "." + keys[i].toString().split(":")[1].toUpperCase();
+            if (!lastBranch.equals(thisBranch)){
+                lastBranch = thisBranch;
+                result += "=====================================\n";
+                result += thisBranch + "\n";
+                result += keys[i].toString().split(":")[2] + ":" + "\n";
+            }else{
+                result += keys[i].toString().split(":")[2] + ":" + "\n";
+            }
             List<VehicleModel> vehicles = map.get(keys[i]);
-            for (VehicleModel vehicle : vehicles)
-                result = result + "returned vehicle: " + " | " + vehicle.getVid() + " | " + vehicle.getVlicense() + " | " + vehicle.getMake() + " | " + vehicle.getModel() + " | " + vehicle.getYear() + " | " + vehicle.getColor() + " | " + vehicle.getOdometer() + "\n";
-            result += "========================================\n";
+            for (VehicleModel vehicle : vehicles) {
+                result = result + " | VID." + vehicle.getVid() + " | " + vehicle.getVlicense() + " | " + vehicle.getMake() + " | " + vehicle.getModel() + " | " + vehicle.getYear() + " | " + vehicle.getColor() + " | " + vehicle.getOdometer() + "KM\n";
+            }
         }
+
+        result += "\n==============================================================================\n";
+        result += "# RETURNS AND REVENUE PER CATEGORY\n";
 
         LinkedHashMap<String, Integer[]> map2 = reportNumReturnedPerCategory(date, city, location);
         Object[] keys2 = map2.keySet().toArray();
         for (int i = 0; i < keys2.length; i++) {
-            result += keys2[i] + "\n";
-            result += "num returned today: " + map2.get(keys2[i])[0] + "\n";
-            result += "revenue today: " + map2.get(keys2[i])[1] + "\n";
-            result += "========================================\n";
+            result += keys2[i].toString().replace(" : ", ".") + ": " + map2.get(keys2[i])[0] + ", " + "$" + map2.get(keys2[i])[1] + "\n";
         }
+
+        result += "\n==============================================================================\n";
+        result += "# RETURNS AND REVENUE PER BRANCH\n";
 
         LinkedHashMap<String, Integer[]> map3 = reportNumReturnedPerBranch(date, city, location);
         Object[] keys3 = map3.keySet().toArray();
         for (int i = 0; i < keys3.length; i++) {
-            result += keys3[i] + "\n";
-            result += "num returned today: " + map3.get(keys3[i])[0] + "\n";
-            result += "revenue today: " + map3.get(keys3[i])[1] + "\n";
-            result += "========================================\n";
+            result += keys3[i].toString().replace(" : ", ".") + ": " + map3.get(keys3[i])[0] + ", " + "$" + map3.get(keys3[i])[1] + "\n";
         }
 
+        result += "\n==============================================================================\n";
+
         Integer[] total = reportNumReturned(date, city, location);
-        result += "grand total returned today: " + total[0] + "\n";
-        result += "grand total revenue today: " + total[1] + "\n";
-        result += "========================================\n";
+        result += "TOTAL # RETURNED TODAY: " + total[0] + "\n";
+        result += "TOTAL REVENUE TODAY: $" + total[1] + "\n";
+        result += "==============================================================================\n";
 
         return result;
     }
