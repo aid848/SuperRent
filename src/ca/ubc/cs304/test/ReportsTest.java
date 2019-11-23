@@ -20,7 +20,6 @@ public class ReportsTest {
 
     @Test
     void generateDailyRentalReport(){
-
         String report = reports.generateDailyRentalReport("2019-10-10");
         System.out.println(report);
     }

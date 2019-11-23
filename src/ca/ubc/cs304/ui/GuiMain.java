@@ -141,15 +141,15 @@ public class GuiMain implements LoginWindowDelegate {
         //TODO
         return null;
     }
-    public JFrame createGeneralReportWindow(String operation) {
+    public void createGeneralReportWindow(String operation) {
         //Contains daily rentals AND Daily returns for all branches
-        //TODO
-        return null;
+        DailyReports dailyReports = new DailyReports(db);
+        dailyReports.setVisible(true);
     }
-    public JFrame createBranchReportWindow(String operation) {
+    public void createBranchReportWindow(String operation) {
         //Contains daily rentals AND Daily returns for a specific branch
-        //TODO
-        return null;
+        DailyReportsByBranch dailyReportsByBranch = new DailyReportsByBranch(db);
+        dailyReportsByBranch.setVisible(true);
     }
 
 
