@@ -17,6 +17,7 @@ public class CustomerActionsListener implements ActionListener {
         if (command.equals("Get Vehicles")) {
             try {
                 guiMain.getVehiclesParse();
+                guiMain.tuples.setVisible(false);
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
@@ -26,6 +27,14 @@ public class CustomerActionsListener implements ActionListener {
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
+        }  else if (command.equals("Reserve")) {
+            try {
+                guiMain.reserveVehicle();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } else if (command.equals("Create")) {
+            guiMain.createCustomer();
         }
 
 

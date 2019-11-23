@@ -26,7 +26,7 @@ public class CustomerActionsTest {
     @BeforeClass
     public static void setup() { //YOU MUST HAVE RUN THE CREATETABLES AND THE POPULATETABLES SCRIPT
         db = new DatabaseConnectionHandler();
-        db.login("ora_afrost99","a31139991");
+        db.login("","");
         example1 = LocalDateTime.of(2018,10,5,12,30);
         example2 = LocalDateTime.of(2018,11,7,10,30);
         customerActions = new CustomerActions(db);
@@ -223,8 +223,8 @@ public class CustomerActionsTest {
     @Test
     public void makeReservationCheckTest() {
         try {
-            assertTrue(customerActions.makeReservationCheck(1, "Cool Rentals", "Economy", example1, example2, new Branch("Cool Rentals", "East Vancouver")));// good
-            assertFalse(customerActions.makeReservationCheck(1, "Whack Rentals", "Economy", example1, example2, new Branch("Whack Rentals", "East Vancouver")));// no vehicle matching request
+            assertTrue(customerActions.makeReservationCheck(1,  "Economy", example1, example2));// good
+            assertFalse(customerActions.makeReservationCheck(1, "Economy", example1, example2));// no vehicle matching request
         } catch (SQLException e) {
             e.printStackTrace();
             fail();
@@ -235,7 +235,7 @@ public class CustomerActionsTest {
     public void makeReservationTest() { //only tests to see if confirmation number occurs TODO check table automatically for entry
         int value = -1;
         try {
-            value = customerActions.makeReservation("Truck",2,"Cool Rentals",example1, example2,new Branch("Cool Rentals", "East Vancouver"));
+            value = customerActions.makeReservation("Truck",2,example1, example2);
         } catch (SQLException e) {
             e.printStackTrace();
             fail();

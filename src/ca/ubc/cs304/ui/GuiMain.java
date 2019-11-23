@@ -25,11 +25,26 @@ public class GuiMain implements LoginWindowDelegate {
     CustomerActionsListener customerListener;
     JButton results; //used so listener can change text of resulting vehicles
     JScrollPane tuples;
+    DefaultListModel tupleModel;
+    JList tuplesList;
     JTextField car;
     JTextField location;
     JFormattedTextField from;
     JFormattedTextField to;
     boolean vehiclesChecked = false;
+    JPanel tupleArea;
+    LocalDateTime fromText;
+    LocalDateTime toText;
+    JTextArea phone;
+    JTextArea address;
+    JTextArea dL;
+    JTextArea name;
+    JTextField vtName;
+    JTextField DL;
+    JFormattedTextField fromReserve;
+    JFormattedTextField toReserve;
+    JFrame reservationWindow;
+
 
     public GuiMain(LoginWindow login) {
         db = new DatabaseConnectionHandler();
@@ -95,24 +110,25 @@ public class GuiMain implements LoginWindowDelegate {
             buttons.add(b);
             i++;
         }
+        //buttons.remove(1);
         System.out.print(buttons.size());
         return buttons.toArray(new JButton[]{});
     }
 
 
-    public JFrame errorMessage(String message) { //use to show errors
-        // TODO show message and provide back button
-        return windowBuilder(null,false,null);
+    public void errorMessage(String message) { //use to show errors
+        JTextArea messageTxt = new JTextArea(message);
+        messageTxt.setEditable(false);
+        JFrame error = new JFrame();
+        error.add(messageTxt);
+        error.setMinimumSize(new Dimension(150,150));
+        error.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        error.setAlwaysOnTop(true);
+        error.setVisible(true);
+
     }
 
-    public JList TupleWindowgenerator(String[][] values,String[] attribute_header) {
-        //TODO make this work
-        JList output = new JList();
-        for (String[] tuple: values) {
 
-        }
-        return null;
-    }
 
     public void createMainWindow() {
         try { //closes any window before it
@@ -122,17 +138,44 @@ public class GuiMain implements LoginWindowDelegate {
         openWindows.push(main);
     }
 
+
     public void createCustomerWindow() throws SQLException {
-        //TODO
-        customer.createNewCustomer(this);
+        JButton createCustomer = new JButton("Create");
+        createCustomer.addActionListener(customerListener);
+        JTextArea phone_hint = new JTextArea("Phone #:");
+        phone_hint.setEditable(false);
+        phone = new JTextArea(1,20);
+        JTextArea name_hint = new JTextArea("Name:");
+        name_hint.setEditable(false);
+        name = new JTextArea(1,20);
+        JTextArea address_hint = new JTextArea("Address:");
+        address_hint.setEditable(false);
+        address = new JTextArea(1,20);
+        JTextArea dL_hint = new JTextArea("DL #");
+        dL_hint.setEditable(false);
+        dL = new JTextArea(1,20);
+        JPanel phoneP = new JPanel();
+        phoneP.add(phone_hint);
+        phoneP.add(phone);
+        JPanel nameP = new JPanel();
+        nameP.add(name_hint);
+        nameP.add(name);
+        JPanel addressP = new JPanel();
+        addressP.add(address_hint);
+        addressP.add(address);
+        JPanel dLp = new JPanel();
+        dLp.add(dL_hint);
+        dLp.add(dL);
+
+        Component[] components = new Component[]{phoneP,nameP,addressP,dLp,createCustomer};
+        JFrame customerWindow = windowBuilder(components,true,new GridLayout(3,2));
+        customerWindow.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        openWindows.push(customerWindow);
     }
 
 
 
     public void createViewAvailableVehiclesWindow() throws ParseException {
-        //todo
-        openWindows.pop().dispose();
-        // have fields asking for {car type, location, time interval} set default branch as well
         JTextField car_hint = new JTextField("Car Type:");
         car_hint.setEditable(false);
         car = new JTextField(20);
@@ -167,34 +210,51 @@ public class GuiMain implements LoginWindowDelegate {
             JButton findVehicles = new JButton("Find Vehicles");
             findVehicles.setActionCommand("Get Vehicles");
             findVehicles.addActionListener(customerListener);
+//            JButton reserveVehicles = new JButton("Reserve vehicle");
+//            reserveVehicles.setActionCommand("Reserve");
+//            reserveVehicles.addActionListener(customerListener);
             JPanel clickable = new JPanel();
+
+//            clickable.add(reserveVehicles);
             clickable.add(findVehicles);
             clickable.add(results);
         // have scrollable tuples shown
-        tuples = new JScrollPane();
+        tupleModel = new DefaultListModel();
+        tuplesList = new JList(tupleModel);
+        tuples = new JScrollPane(tuplesList);
         tuples.setVisible(false);
 
 
+        JTextArea header = new JTextArea("Tuple legend: VID|License|Make|Model|Year|Color|Odometer|Type|Location|City");
+
+
+        clickable.add(header);
         Component[] items = new Component[]{carStuff,locationStuff,dateStuff,timeStuff,clickable,tuples};
 
-        JFrame window = windowBuilder(items,true,new GridLayout(4,2));
+        JFrame window = windowBuilder(items,false,new GridLayout(4,2));
+        window.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         window.setLayout(new GridLayout(4,2));
         window.setTitle("View Available Vehicles");
         openWindows.push(window);
-
+        window.setMinimumSize(new Dimension(900,400));
+        window.repaint();
+        window.setVisible(true);
     }
 
     public void getVehiclesShow() throws SQLException {
         if (vehiclesChecked) {
-            customer.retrieveVehicles();
+            tupleModel.removeAllElements();
+            for (String tuple: customer.retrieveVehicles()) {
+                tupleModel.addElement(tuple);
+            }
+
+            tuples.setVisible(true);
         }
     }
 
     public void getVehiclesParse() throws SQLException {
         String typeText;
         String locationText;
-        LocalDateTime fromText;
-        LocalDateTime toText;
         if (car.getText().isEmpty()) {
             typeText = null;
         }else {
@@ -210,7 +270,6 @@ public class GuiMain implements LoginWindowDelegate {
             toText = null;
         }else {
             try {
-                //TODO format dates
                 if (validateDate(from.getText()) & validateDate(to.getText())) {
                     fromText = createDate(from.getText());
                     toText = createDate(to.getText());
@@ -276,29 +335,73 @@ public class GuiMain implements LoginWindowDelegate {
         return LocalDateTime.of(input[0],input[1],input[2],input[3],input[4]);
     }
 
-    public void createMakeReservationWindow() {
-        //TODO
-        openWindows.pop().dispose();
+    public void createMakeReservationWindow(String vehicleType, String locationName, LocalDateTime fromDate, LocalDateTime toDate, Branch branch) {
         //ask for driverslicense number and open create customer window if new
         //make reservation form and then show conformation number if no error
        // openWindows.push(windowBuilder());
+        System.out.println(vehicleType);
+        System.out.println(locationName);
+        System.out.println(fromDate);
+        System.out.println(toDate);
+        System.out.println(branch);
+
+    }
+
+    public void createMakeReservationWindow() throws ParseException { //TO make reservation confno vtname, dlicense, fromdataTime, todateTime
+
+        JTextField DL_hint = new JTextField("Driver's License #:");
+        DL_hint.setEditable(false);
+        DL = new JTextField(20);
+        JTextField vtName_hint = new JTextField("Vehicle Type:");
+        vtName_hint.setEditable(false);
+        vtName = new JTextField(20);
+        JTextField from_hint = new JTextField("From (yyyy-mm-dd-24HH-MM):");
+        from_hint.setEditable(false);
+        fromReserve = new JFormattedTextField(new MaskFormatter("####-##-##-##-##"));
+        fromReserve.setColumns(15);
+        JTextField to_hint = new JTextField("To (yyyy-mm-dd-24HH-MM):");
+        to_hint.setEditable(false);
+        toReserve = new JFormattedTextField(new MaskFormatter("####-##-##-##-##"));
+        toReserve.setColumns(15);
+        //connecting hints and input field
+        JPanel dLthings = new JPanel();
+        dLthings.add(DL_hint);
+        dLthings.add(DL);
+        JPanel vtNamethings = new JPanel();
+        vtNamethings.add(vtName_hint);
+        vtNamethings.add(vtName);
+        JPanel dateStuff = new JPanel();
+        dateStuff.add(from_hint);
+        dateStuff.add(fromReserve);
+        JPanel timeStuff = new JPanel();
+        timeStuff.add(to_hint);
+        timeStuff.add(toReserve);
+        //buttons
+        JButton reserve = new JButton("Reserve");
+        reserve.addActionListener(customerListener);
+        Component[] c = new Component[]{dLthings,vtNamethings,dateStuff,timeStuff,reserve};
+
+
+
+        reservationWindow = windowBuilder(c,true,new GridLayout(3,2));
+        reservationWindow.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+        
+
     }
 
     public JFrame createRentVehicleWindow() {
         //TODO
         return null;
     }
-
     public JFrame createRentReceiptWindow() {
         //TODO
         return null;
     }
-
     public JFrame createReturnVehicleWindow() {
         //TODO
         return null;
     }
-
     public JFrame createReturnReceiptWindow() {
         //TODO
         return null;
@@ -313,10 +416,85 @@ public class GuiMain implements LoginWindowDelegate {
         //TODO
         return null;
     }
-
-
     public JFrame createTerminalAndSetupWindow() {
-        //TODO create a menu where you can initalize and populate tables and perform queries
+        //TODO create a menu where you can initialize and populate tables and perform queries
         return null;
     }
+
+    public void reserveVehicle() throws SQLException {
+        boolean pass = true; //checks info is suitable
+        int dNum = 0;
+        if ((DL.getText().isEmpty()) || (vtName.getText().isEmpty()) || (fromReserve.getText().isEmpty()) || (toReserve.getText().isEmpty())) {
+            pass = false;
+        } else if (!validateDate(fromReserve.getText()) || !validateDate(toReserve.getText())) {
+            pass = false;
+        }
+        try {
+            dNum = Integer.parseInt(DL.getText());
+        } catch (NumberFormatException e) {
+            pass = false;
+        }
+
+        if (!pass) {
+            errorMessage("Info is not valid");
+            return;
+        }
+
+        if(!customer.checkForExistingCustomer(dNum)) {
+            errorMessage("Customer does not exist");
+            createCustomerWindow();
+            return;
+        }
+
+        int confNo = customer.makeReservation(vtName.getText(),dNum,createDate(fromReserve.getText()), createDate(toReserve.getText()));
+
+        if (confNo == -1){
+            errorMessage("Vehicle Type unavailable");
+            return;
+        }
+
+
+        reservationWindow.dispose();
+
+        JTextArea dLconf = new JTextArea("Drivers License:" + dNum);
+        dLconf.setEditable(false);
+        JTextArea fromconf = new JTextArea("From Date:" + fromReserve.getText());
+        fromconf.setEditable(false);
+        JTextArea toconf = new JTextArea("To Date:" + toReserve.getText());
+        toconf.setEditable(false);
+        JTextArea confnum = new JTextArea("Confirmation #" + confNo);
+        confnum.setEditable(false);
+
+        Component[] c = new Component[]{dLconf,fromconf,toconf,confnum};
+        JFrame receipt = windowBuilder(c,true,new GridLayout(4,1));
+        receipt.setTitle("Reservation Success!");
+        receipt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+    }
+
+    public void createCustomer() {
+
+        try {
+            customer.createNewCustomer(Long.parseLong(phone.getText()),name.getText(),address.getText(),Integer.parseInt(dL.getText()));
+            openWindows.pop().dispose();
+            errorMessage("Success");
+            createMainWindow();
+        } catch (SQLException e) {
+            errorMessage("Customer already exists");
+            openWindows.pop().dispose();
+            try {
+                createCustomerWindow();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } catch (Exception e) {
+            errorMessage("invalid data entered!");
+            openWindows.pop().dispose();
+            try {
+                createCustomerWindow();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
 }

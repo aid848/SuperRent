@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 
 public class CustomerActions {
@@ -54,19 +55,19 @@ with the vehicles’ details should be displayed).
 
     //REQUIRES: viewNumberOfVehicles to have been run
     //Just shows names of vehicles returned from viewNumberOfVehicles
-    public String retrieveVehicles() throws SQLException { //rework to gui elements with vid embedded for identifying what the user selects
+    public String[] retrieveVehicles() throws SQLException { //rework to gui elements with vid embedded for identifying what the user selects
         if (vehiclesOfInterest==null) {
-            return "";
+            return new String[]{};
         }
         vehiclesOfInterest.beforeFirst();
-        StringBuilder output = new StringBuilder();
+        ArrayList<String> output = new ArrayList<>();
         while (vehiclesOfInterest.next()) {
             //SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
-            output.append(vehiclesOfInterest.getString(1)).append(" ").append(vehiclesOfInterest.getString(2) + " ").append(vehiclesOfInterest.getString(3)).append(" ").append(vehiclesOfInterest.getString(4) + " ").append(vehiclesOfInterest.getString(5)).append(" ").append(vehiclesOfInterest.getString(6) + " ").append(vehiclesOfInterest.getString(7)).append(" ").append(vehiclesOfInterest.getString(8) + " ").append(vehiclesOfInterest.getString(9)).append(" ").append(vehiclesOfInterest.getString(10)).append("\n");
+            output.add(vehiclesOfInterest.getString(1) + ":" + vehiclesOfInterest.getString(2) + ":" + vehiclesOfInterest.getString(3) + ":" + vehiclesOfInterest.getString(4) + ":" + vehiclesOfInterest.getString(5) + ":" + vehiclesOfInterest.getString(6) + ":" + vehiclesOfInterest.getString(7) + ":" + vehiclesOfInterest.getString(8) + ":" + vehiclesOfInterest.getString(9) + ":" + vehiclesOfInterest.getString(10) + "\n");
         }
 
 
-        return output.toString();
+        return output.toArray(new String[]{});
     }
 
     private String viewNumberOfVehiclesQueryGen(boolean[] entered, String type, String location, LocalDateTime pickupDate, LocalDateTime returnDate, Branch branch) {
@@ -203,11 +204,11 @@ If the customer’s desired vehicle is not available, an appropriate error messa
 be shown.
      */
 
-    public boolean makeReservationCheck(int driversLicense,String location,String vehicleType, LocalDateTime pickupDate, LocalDateTime returnDate,Branch branch) throws SQLException {
-        int hits = viewNumberOfVehicles(vehicleType,location,pickupDate,returnDate,branch);
+    public boolean makeReservationCheck(int driversLicense,String vehicleType, LocalDateTime pickupDate, LocalDateTime returnDate) throws SQLException {
+        int hits = viewNumberOfVehicles(vehicleType,null,pickupDate,returnDate,null);
         if (hits>0) { //vehicle exists
             if(!checkForExistingCustomer(driversLicense)) {
-                createNewCustomer();
+                return false;
             }
             return true;
         } else {
@@ -219,7 +220,7 @@ be shown.
         int hits = viewNumberOfVehicles(vehicleType,location,pickupDate,returnDate,branch);
         if (hits>0) { //vehicle exists
             if(!checkForExistingCustomer(driversLicense)) {
-                createNewCustomer(g);
+                g.createCustomerWindow();
             }
             return true;
         } else {
@@ -227,9 +228,9 @@ be shown.
         }
     }
 
-    public int makeReservation(String vehicleTypeName ,int driversLicense,String location, LocalDateTime fromDateTime,LocalDateTime toDateTime, Branch branch) throws SQLException {
+    public int makeReservation(String vehicleTypeName ,int driversLicense, LocalDateTime fromDateTime,LocalDateTime toDateTime) throws SQLException {
         int confirmationNumber = Math.abs((int)System.currentTimeMillis());
-        if (makeReservationCheck(driversLicense,location,vehicleTypeName,fromDateTime,toDateTime,branch)) {
+        if (makeReservationCheck(driversLicense,vehicleTypeName,fromDateTime,toDateTime)) {
             String statement = "INSERT INTO Reservation VALUES (" + confirmationNumber + ",'" + vehicleTypeName + "'," + driversLicense + "," + dateTimeToOracle(fromDateTime) + "," + dateTimeToOracle(toDateTime) + ")";
             PreparedStatement ps = db.connection.prepareStatement(statement);
             ps.executeUpdate();
@@ -255,7 +256,7 @@ be shown.
         return true;
     }
 
-    private String dateTimeToOracle(LocalDateTime d) {
+    public String dateTimeToOracle(LocalDateTime d) {
         //TO_TIMESTAMP('2019-12-25 08:15:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF')
         StringBuilder output = new StringBuilder();
         output.append("TO_TIMESTAMP(");
@@ -264,12 +265,10 @@ be shown.
         return output.toString();
     }
 
-    public void createNewCustomer() throws SQLException {
 
-    }
-
-    public void createNewCustomer(GuiMain g) throws SQLException {
-        g.createCustomerWindow();
+    public void createNewCustomer(long cell, String name, String address, int driversLicense) throws SQLException {
+        Customer c = new Customer(cell,name,address,driversLicense);
+        createNewCustomer(c);
     }
 
     public void createNewCustomer(Customer c) throws SQLException {
