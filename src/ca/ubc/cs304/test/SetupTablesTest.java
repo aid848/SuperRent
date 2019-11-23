@@ -15,7 +15,7 @@ public class SetupTablesTest {
         DatabaseConnectionHandler db = new DatabaseConnectionHandler();
         db.login(username,password);
         try {
-            db.firstTimeSetup();
+            db.oldFirstTimeSetup();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

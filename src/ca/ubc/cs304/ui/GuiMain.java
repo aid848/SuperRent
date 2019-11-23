@@ -146,15 +146,16 @@ public class GuiMain implements LoginWindowDelegate {
         DailyReports dailyReports = new DailyReports(db);
         dailyReports.setVisible(true);
     }
+
     public void createBranchReportWindow(String operation) {
         //Contains daily rentals AND Daily returns for a specific branch
         DailyReportsByBranch dailyReportsByBranch = new DailyReportsByBranch(db);
         dailyReportsByBranch.setVisible(true);
     }
 
-
-    public JFrame createTerminalAndSetupWindow() {
-        //TODO create a menu where you can initalize and populate tables and perform queries
-        return null;
+    public void createTerminalAndSetupWindow() {
+        //initalize and populate tables and perform queries
+        SetupAndQuery setupAndQuery = new SetupAndQuery(db);
+        setupAndQuery.setVisible(true);
     }
 }

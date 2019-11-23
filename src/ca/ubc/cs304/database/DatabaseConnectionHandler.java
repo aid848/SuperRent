@@ -1,15 +1,8 @@
 package ca.ubc.cs304.database;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -170,7 +163,7 @@ public class DatabaseConnectionHandler {
 
 	//REQUIRES: connection must be established to oracle to login
 
-	public void firstTimeSetup() throws FileNotFoundException {
+	public void oldFirstTimeSetup() throws FileNotFoundException {
 		ArrayList<String> statements = new ArrayList<String>();
 		try {
 			Scanner in = new Scanner(new File("SQL\\setuptables.sql")); //change to droptables.sql or populatetables.sql as needed
@@ -188,4 +181,99 @@ public class DatabaseConnectionHandler {
 		}
 
 	}
+
+	public Boolean firstTimeSetupBool(int stage) throws FileNotFoundException {
+		String path;
+		Boolean successFlag = false;
+		if(stage == 1) {
+			path = "setuptables.sql";
+		} else if (stage == 2) {
+			path = "populatetables.sql";
+		}else {
+			path = "droptables.sql";
+		}
+		ArrayList<String> statements = new ArrayList<String>();
+		try {
+			Scanner in = new Scanner(new File("SQL\\" + path));
+			in.useDelimiter(";");
+			while (in.hasNext())
+				statements.add(in.next());
+			for (String statement: statements) {
+				PreparedStatement p = connection.prepareStatement(statement);
+				p.executeUpdate();
+				connection.commit();
+				p.close();
+			}
+			successFlag = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return successFlag;
+		}
+		return successFlag;
+	}
+
+	//execute query and return result tuples as formatted string
+	public String executeStringQuery(String stringQuery){
+		ArrayList<String> columnNames = new ArrayList<>();
+		String result = "";
+		Integer maxLength = 0;
+		try {
+			Statement stmt = connection.createStatement();
+			String lowerCase = stringQuery.toLowerCase();
+			if (lowerCase.startsWith("insert") || lowerCase.startsWith("delete") || lowerCase.startsWith("update")){
+				stmt.executeUpdate(stringQuery);
+				connection.commit();
+				result = "Executed";
+			}else {
+				ResultSet rs = stmt.executeQuery(stringQuery);
+
+				ResultSetMetaData rsmd = rs.getMetaData();
+
+				for (int i = 0; i < rsmd.getColumnCount(); i++) {
+					columnNames.add(rsmd.getColumnName(i + 1));
+					String columnName = rsmd.getColumnName(i + 1);
+					if (columnName.length() > maxLength) {
+						maxLength = columnName.length();
+					}
+				}
+
+				ArrayList<ArrayList<String>> rows = new ArrayList<>();
+
+				while (rs.next()) {
+					ArrayList<String> tempAttributeList = new ArrayList<>();
+					for (String columnName : columnNames) {
+						String attribute = rs.getObject(columnName).toString();
+						tempAttributeList.add(attribute);
+						if (attribute.length() > maxLength) {
+							maxLength = attribute.length();
+						}
+					}
+					rows.add(tempAttributeList);
+				}
+				rs.close();
+				stmt.close();
+
+				for (String columnName : columnNames) {
+					result += String.format("%1$" + maxLength + "s", columnName) + " | ";
+				}
+				result += "\n";
+				for (ArrayList<String> row : rows) {
+					for (String attribute : row) {
+						result += String.format("%1$" + maxLength + "s", attribute) + " | ";
+					}
+					result += "\n";
+				}
+			}
+
+		} catch (SQLException e) {
+			System.out.println(EXCEPTION_TAG + " " + e.getMessage());
+			result = EXCEPTION_TAG + " " + e.getMessage();
+		}
+
+		return result;
+
+	}
+
+
+
 }
