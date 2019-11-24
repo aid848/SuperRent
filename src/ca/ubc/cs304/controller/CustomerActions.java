@@ -31,12 +31,24 @@ The user should be able to provide any subset of {car type, location, time inter
 view the available vehicles. If the user provides no information, your application should
 automatically return a list of all vehicles (at that branch) sorted in some reasonable way
 for the user to peruse.
-
 The actual number of available vehicles should be displayed. After seeing the number of
 vehicles, there should be a way for the user to see the details of the available vehicles if
 the user desires to do so (e.g., if the user clicks on the number of available vehicles, a list
 with the vehicles’ details should be displayed).
      */
+
+    // returns number of vehicles available for rent at the given branch for the given vehicle type
+    private int getNumberOfVehicles(String vType, Branch branch) throws SQLException {
+        PreparedStatement statement = db.connection.prepareStatement("SELECT COUNT(*) FROM VEHICLE WHERE LOCATION = ? AND CITY = ? AND VTNAME = ? AND STATUS = 'Available'");
+        statement.setString(1, branch.getLocation());
+        statement.setString(2, branch.getCity());
+        statement.setString(3, vType);
+        ResultSet r = statement.executeQuery();
+        if (r.next()) {
+            return r.getInt(1);
+        }
+        throw new IllegalArgumentException("No vehicles of this type are available to rent at this location");
+    }
 
     //should return a number and have list of returned tuples ready to go
     public int viewNumberOfVehicles(String type, String location, LocalDateTime pickupDate, LocalDateTime returnDate, Branch branch) throws SQLException {
@@ -190,16 +202,10 @@ with the vehicles’ details should be displayed).
     /*
     Make a reservation. If a customer is new, add the customer’s details to the database.
 (You may choose to have a different interface for this).
-
-
-
 Upon successful completion, a confirmation number for the reservation should be
 shown along with the details entered during the reservation. Refer to the project
 description for details on what kind of information the user needs to provide when
 making a reservation.
-
-
-
 If the customer’s desired vehicle is not available, an appropriate error message should
 be shown.
      */
@@ -271,6 +277,20 @@ be shown.
         createNewCustomer(c);
     }
 
+    private void createNewCustomer(int dLicense) throws SQLException{
+        PreparedStatement statement = db.connection.prepareStatement("INSERT INTO CUSTOMER VALUES (?,?,?,?)");
+        statement.setInt(1, -1);
+        statement.setString(2, null);
+        statement.setString(3, null);
+        statement.setInt(4, dLicense);
+        statement.executeUpdate();
+        db.connection.commit();
+    }
+
+    public void createNewCustomer(GuiMain g) throws SQLException {
+        g.createCustomerWindow();
+    }
+
     public void createNewCustomer(Customer c) throws SQLException {
         String orderedValues = "'" + c.getCellphone() + "','" + c.getName() + "','" + c.getAddress() + "','" + c.getDlicense() + "'";
         String statement = "INSERT INTO Customer VALUES (" + orderedValues + ")";
@@ -280,4 +300,3 @@ be shown.
     }
 
 }
-

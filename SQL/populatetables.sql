@@ -4,12 +4,12 @@ insert into customer values (null, 'Jerry', null, 3);
 insert into customer values (null, 'Frank', null, 4);
 
 insert into vehicletype values('Economy', 'Sunroof', 200, 50, 20, 100, 25, 15);
-insert into vehicletype values('Compact', null, null, null, null, null, null, null);
-insert into vehicletype values('Mid-size', null, null, null, null, null, null, null);
-insert into vehicletype values('Standard', null, null, null, null, null, null, null);
-insert into vehicletype values('Full-size', null, null, null, null, null, null, null);
-insert into vehicletype values('SUV', null, null, null, null, null, null, null);
-insert into vehicletype values('Truck', null, null, null, null, null, null, null);
+insert into vehicletype values('Compact', null, 300, 60, 3, 20, 1, 2);
+insert into vehicletype values('Mid-size', null, 400, 70, 4, 25, 2, 3);
+insert into vehicletype values('Standard', null, 500, 80, 5, 30, 3, 4);
+insert into vehicletype values('Full-size', null, 600, 85, 6, 40, 5, 5);
+insert into vehicletype values('SUV', null, 650, 90, 8, 50, 7, 7);
+insert into vehicletype values('Truck', null, 800, 110, 12, 60, 10, 10);
 
 insert into branch values ('Cool Rentals', 'East Vancouver');
 insert into branch values ('Cooler Rentals', 'West Vancouver');
