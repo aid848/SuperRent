@@ -239,7 +239,12 @@ public class DatabaseConnectionHandler {
 			ArrayList<String> tempAttributeList = new ArrayList<>();
 			for (int i = 0; i < columnNames.size(); i++) {
 				String columnName = columnNames.get(i);
-				String attribute = rs.getObject(columnName) == null ? "null" : rs.getObject(columnName).toString();
+				String attribute;
+				if (columnName.toLowerCase().equals("cellphone")){
+					attribute = String.valueOf(rs.getLong(columnName));
+				}else{
+					attribute = rs.getObject(columnName) == null ? "null" : rs.getObject(columnName).toString();
+				}
 				tempAttributeList.add(attribute);
 				if (attribute.length() > maxLengths.get(i)) {
 					maxLengths.set(i, attribute.length());
