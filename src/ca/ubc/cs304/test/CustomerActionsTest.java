@@ -32,12 +32,12 @@ public class CustomerActionsTest {
         customerActions = new CustomerActions(db);
         try {
             try {
-                db.firstTimeSetup(3);
+                db.firstTimeSetupBool(3);
             } catch(Exception e) {
                 System.out.println("no tables to clear");
             }
             try {
-                db.firstTimeSetup();
+                db.firstTimeSetupOld();
             } catch (Exception ignored) {
 
             }

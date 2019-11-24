@@ -161,7 +161,7 @@ public class DatabaseConnectionHandler {
 		}
 	}
 
-	public void firstTimeSetupOld() {
+	public void firstTimeSetupOld() throws FileNotFoundException {
 		firstTimeSetupBool(1);
 		firstTimeSetupBool(2);
 	}
