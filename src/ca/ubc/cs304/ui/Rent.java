@@ -157,7 +157,7 @@ public class Rent extends JFrame {
                     int dLicense = Integer.parseInt(dLicenseTextField.getText());
 
                     CustomerActions customerActions = new CustomerActions(db);
-                    int confirmationNo = customerActions.makeReservation(vtName, dLicense, branchName, from, to, branch);
+                    int confirmationNo = customerActions.makeReservation(vtName, dLicense, from, to);
                     if (confirmationNo == -1) {
                         throw new IllegalArgumentException("Vehicle type is not available at the given location");
                     }
