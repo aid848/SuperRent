@@ -1,19 +1,12 @@
 package ca.ubc.cs304.database;
 
-import java.io.BufferedReader;
+import ca.ubc.cs304.model.BranchModel;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Scanner;
-
-import ca.ubc.cs304.model.BranchModel;
 
 /**
  * This class handles all database related transactions
@@ -23,7 +16,7 @@ public class DatabaseConnectionHandler {
 	private static final String EXCEPTION_TAG = "[EXCEPTION]";
 	private static final String WARNING_TAG = "[WARNING]";
 	
-	private Connection connection = null;
+	public Connection connection = null;
 	
 	public DatabaseConnectionHandler() {
 		try {
@@ -171,10 +164,18 @@ public class DatabaseConnectionHandler {
 
 	//REQUIRES: connection must be established to oracle to login
 
-	public void firstTimeSetup() throws FileNotFoundException {
+	public void firstTimeSetup(int stage) throws FileNotFoundException {
+		String path;
+		if(stage == 1) {
+			path = "setuptables.sql";
+		} else if (stage == 2) {
+			path = "populatetables.sql";
+		}else {
+			path = "droptables.sql";
+		}
 		ArrayList<String> statements = new ArrayList<String>();
 		try {
-			Scanner in = new Scanner(new File("SQL\\setuptables.sql")); //change to droptables.sql or populatetables.sql as needed
+			Scanner in = new Scanner(new File("SQL\\" + path));
 			in.useDelimiter(";");
 			while (in.hasNext())
 				statements.add(in.next());
@@ -188,5 +189,14 @@ public class DatabaseConnectionHandler {
 			e.printStackTrace();
 		}
 
+	}
+
+	public void firstTimeSetup() {
+		try {
+			firstTimeSetup(1);
+			firstTimeSetup(2);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
