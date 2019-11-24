@@ -3,6 +3,7 @@ package ca.ubc.cs304.ui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.text.ParseException;
 
 public class CustomerActionsListener implements ActionListener {
     GuiMain guiMain;
@@ -35,6 +36,12 @@ public class CustomerActionsListener implements ActionListener {
             }
         } else if (command.equals("Create")) {
             guiMain.createCustomer();
+        } else if (command.equals("reset")) {
+            try {
+                guiMain.resetAvailableFields();
+            } catch (ParseException ex) {
+                ex.printStackTrace();
+            }
         }
 
 
