@@ -99,7 +99,7 @@ public class GuiMain implements LoginWindowDelegate {
 
     private Component[] setupCustomerAndClerkActionButtons() {
         String[] actions = new String[]{"Search Available Vehicles", "Make Reservation","Rent Vehicle",
-                "Return Vehicle", "All Daily Rentals Report","Daily Rentals by Branch", "Daily Returns", "Branch Daily Returns", "Create new Customer", "Terminal & Setup" };
+                "Return Vehicle", "Daily Reports","Daily Reports by Branch", "Create new Customer", "Terminal & Setup" };
         ArrayList<JButton> buttons = new ArrayList<>();
         int i = 1;
         for (String action : actions) {
@@ -134,7 +134,7 @@ public class GuiMain implements LoginWindowDelegate {
         try { //closes any window before it
             openWindows.pop().dispose();
         } catch (Exception ignored){ }
-        JFrame main = windowBuilder(setupCustomerAndClerkActionButtons(),true,new GridLayout(5,2));
+        JFrame main = windowBuilder(setupCustomerAndClerkActionButtons(),true,new GridLayout(4,2));
         openWindows.push(main);
     }
 

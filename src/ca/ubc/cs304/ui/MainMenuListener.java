@@ -41,18 +41,10 @@ public class MainMenuListener implements ActionListener {
                     System.out.print("branch rental report");
                     break;
                 case "main7":
-                    gui.createGeneralReportWindow("Returns");
-                    System.out.print("general return report");
-                    break;
-                case "main8":
-                    gui.createBranchReportWindow("Returns");
-                    System.out.print("branch return report");
-                    break;
-                case "main9":
                     gui.createCustomerWindow();
                     System.out.print("new customer");
                     break;
-                case "main10":
+                case "main8":
                     gui.createTerminalAndSetupWindow();
                     System.out.print("terminal and setup");
                     break;
