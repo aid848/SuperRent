@@ -406,19 +406,22 @@ public class GuiMain implements LoginWindowDelegate {
         //TODO
         return null;
     }
-    public JFrame createGeneralReportWindow(String operation) {
+    public void createGeneralReportWindow(String operation) {
         //Contains daily rentals AND Daily returns for all branches
-        //TODO
-        return null;
+        DailyReports dailyReports = new DailyReports(db);
+        dailyReports.setVisible(true);
     }
-    public JFrame createBranchReportWindow(String operation) {
+
+    public void createBranchReportWindow(String operation) {
         //Contains daily rentals AND Daily returns for a specific branch
-        //TODO
-        return null;
+        DailyReportsByBranch dailyReportsByBranch = new DailyReportsByBranch(db);
+        dailyReportsByBranch.setVisible(true);
     }
-    public JFrame createTerminalAndSetupWindow() {
-        //TODO create a menu where you can initialize and populate tables and perform queries
-        return null;
+
+    public void createTerminalAndSetupWindow() {
+        //initalize and populate tables and perform queries
+        SetupAndQuery setupAndQuery = new SetupAndQuery(db);
+        setupAndQuery.setVisible(true);
     }
 
     public void reserveVehicle() throws SQLException {

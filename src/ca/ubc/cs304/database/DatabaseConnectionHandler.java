@@ -161,11 +161,14 @@ public class DatabaseConnectionHandler {
 		}
 	}
 
+	public void firstTimeSetupOld() {
+		firstTimeSetupBool(1);
+		firstTimeSetupBool(2);
+	}
 
-	//REQUIRES: connection must be established to oracle to login
-
-	public void firstTimeSetup(int stage) throws FileNotFoundException {
+	public Boolean firstTimeSetupBool(int stage) throws FileNotFoundException {
 		String path;
+		Boolean successFlag = false;
 		if(stage == 1) {
 			path = "setuptables.sql";
 		} else if (stage == 2) {
@@ -185,18 +188,79 @@ public class DatabaseConnectionHandler {
 				connection.commit();
 				p.close();
 			}
+			successFlag = true;
 		} catch (Exception e) {
 			e.printStackTrace();
+			return successFlag;
 		}
-
+		return successFlag;
 	}
 
-	public void firstTimeSetup() {
+	//execute query and return result tuples as formatted string
+	public String executeStringQuery(String stringQuery){
+		String result = "";
 		try {
-			firstTimeSetup(1);
-			firstTimeSetup(2);
-		} catch (Exception e) {
-			e.printStackTrace();
+			Statement stmt = connection.createStatement();
+			String lowerCase = stringQuery.toLowerCase();
+			if (lowerCase.startsWith("insert") || lowerCase.startsWith("delete") || lowerCase.startsWith("update")){
+				stmt.executeUpdate(stringQuery);
+				connection.commit();
+				result = "Executed";
+			}else {
+				ResultSet rs = stmt.executeQuery(stringQuery);
+				result = prettyPrintTuples(rs);
+				rs.close();
+				stmt.close();
+			}
+
+		} catch (SQLException e) {
+			System.out.println(EXCEPTION_TAG + " " + e.getMessage());
+			result = EXCEPTION_TAG + " " + e.getMessage();
 		}
+
+		return result;
 	}
+
+	public String prettyPrintTuples(ResultSet rs) throws SQLException {
+		ArrayList<String> columnNames = new ArrayList<>();
+		ArrayList<ArrayList<String>> rows = new ArrayList<>();
+		ArrayList<Integer> maxLengths = new ArrayList<>();
+		String result = "";
+
+		ResultSetMetaData rsmd = rs.getMetaData();
+
+		for (int i = 0; i < rsmd.getColumnCount(); i++) {
+			columnNames.add(rsmd.getColumnName(i + 1));
+			String columnName = rsmd.getColumnName(i + 1);
+			maxLengths.add(i, columnName.length());
+		}
+
+		while (rs.next()) {
+			ArrayList<String> tempAttributeList = new ArrayList<>();
+			for (int i = 0; i < columnNames.size(); i++) {
+				String columnName = columnNames.get(i);
+				String attribute = rs.getObject(columnName) == null ? "null" : rs.getObject(columnName).toString();
+				tempAttributeList.add(attribute);
+				if (attribute.length() > maxLengths.get(i)) {
+					maxLengths.set(i, attribute.length());
+				}
+			}
+			rows.add(tempAttributeList);
+		}
+
+		for (int i = 0; i < columnNames.size(); i++) {
+			String columnName = columnNames.get(i);
+			result += String.format("%1$" + maxLengths.get(i) + "s", columnName) + " | ";
+		}
+		result += "\n";
+		for (ArrayList<String> row : rows) {
+			for (int i = 0; i < row.size(); i++) {
+				String attribute = row.get(i);
+				result += String.format("%1$" + maxLengths.get(i) + "s", attribute) + " | ";
+			}
+			result += "\n";
+		}
+		return result;
+	}
+
 }

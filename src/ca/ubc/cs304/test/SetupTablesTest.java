@@ -13,7 +13,7 @@ public class SetupTablesTest {
         DatabaseConnectionHandler db = new DatabaseConnectionHandler();
         db.login(username,password);
         try {
-            db.firstTimeSetup();
+            db.firstTimeSetupOld();
         } catch (Exception e) {
             e.printStackTrace();
         }
