@@ -2,7 +2,7 @@ package ca.ubc.cs304.controller;
 
 import ca.ubc.cs304.database.DatabaseConnectionHandler;
 import ca.ubc.cs304.model.*;
-import ca.ubc.cs304.ui.Rent;
+import oracle.jdbc.proxy.annotation.Pre;
 
 import java.sql.*;
 import java.util.Calendar;
@@ -17,7 +17,7 @@ public class Clerk {
 
     // gets first available vehicle of given type
     public Vehicle getAvailableVehicle(String vehicleType) throws SQLException {
-        PreparedStatement statement = db.connection.prepareStatement("SELECT * FROM VEHICLE WHERE VTNAME = ?");
+        PreparedStatement statement = db.connection.prepareStatement("SELECT * FROM VEHICLE WHERE VTNAME = ? AND STATUS = 'Available'");
         statement.setString(1, vehicleType);
         ResultSet result = statement.executeQuery();
         while (result.next()) {
@@ -60,6 +60,12 @@ public class Clerk {
 
     // inserts Rent tuple into Rent table and returns true if the insertion is successful, also changes vehicle status to "Rented"
     public Rental getRentalReceipt(Reservation reservation, Vehicle vehicle, Card card) throws SQLException {
+        if (vehicleAlreadyRented(vehicle)) {
+            throw new IllegalArgumentException("Vehicle is already rented");
+        }
+        if (rentalMadeForReservation(reservation)) {
+            throw new IllegalArgumentException("This reservation was already used to rent a vehicle");
+        }
         PreparedStatement statement = db.connection.prepareStatement("INSERT INTO Rent VALUES (?,?,?,?,?,?,?,?,?,?)");
         int rID = reservation.getConfNum() + 1000000;
         statement.setInt(1, rID);
@@ -88,18 +94,18 @@ public class Clerk {
     }
 
     public ReturnReceipt returnVehicle(Return ret) throws SQLException {
-//        // check if vehicle is a rental
-//        PreparedStatement statement = db.connection.prepareStatement("SELECT * FROM RENT WHERE RID = ?");
-//        statement.setInt(1, ret.getrID());
-//        ResultSet result = statement.executeQuery();
-//        statement.close();
-//        if (!result.next()) {
-//            throw new IllegalArgumentException("Vehicle was not previously rented");
-//        }
+        // check if vehicle was returned already
+        PreparedStatement ps = db.connection.prepareStatement("SELECT * FROM RETURN WHERE RID = ?");
+        ps.setInt(1, ret.getrID());
+        ResultSet result = ps.executeQuery();
+        db.connection.commit();
+        if (result.next()) {
+            throw new IllegalArgumentException("Vehicle was already returned");
+        }
 //
         // calculate total cost of rental
         // get vehicle type associated with rental to access rates
-        PreparedStatement s = db.connection.prepareStatement("SELECT r1.RID, r1.FROMDATETIME, vt.WRATE, vt.DRATE, vt.HRATE, vt.DIRATE, vt.HIRATE, vt.KRATE\n" +
+        PreparedStatement s = db.connection.prepareStatement("SELECT r1.RID, r1.FROMDATETIME, vt.WRATE, vt.DRATE, vt.HRATE, vt.DIRATE, vt.HIRATE, vt.KRATE, v.ODOMETER\n" +
                 "FROM Rent r1, VEHICLE v, VEHICLETYPE vt WHERE r1.RID = ? AND r1.VLICENSE = v.VLICENSE AND v.VTNAME = vt.VTNAME");
         s.setInt(1, ret.getrID());
         ResultSet r = s.executeQuery();
@@ -111,14 +117,16 @@ public class Clerk {
             returnVal.setRentalDate(r.getTimestamp(2));
             returnVal.setReturnDate(ret.getReturnDateTime());
             returnVal.setElapsedWeeks(elapsedWeeks(returnVal.getRentalDate(), returnVal.getReturnDate()));
-            returnVal.setElapsedDays(elapsedDays(returnVal.getRentalDate(), returnVal.getReturnDate()));
-            returnVal.setElapsedHours(elapsedHours(returnVal.getRentalDate(), returnVal.getReturnDate()));
+            returnVal.setElapsedDays(elapsedDaysRemainder(returnVal.getRentalDate(), returnVal.getReturnDate()));
+            returnVal.setElapsedHours(elapsedHoursRemainder(returnVal.getRentalDate(), returnVal.getReturnDate()));
             returnVal.setWeeklyRate(r.getDouble(3));
             returnVal.setDailyRate(r.getDouble(4));
             returnVal.setHourlyRate(r.getDouble(5));
             returnVal.setDailyInsuranceRate(r.getDouble(6));
             returnVal.setHourlyInsuranceRate(r.getDouble(7));
             returnVal.setkRate(r.getDouble(8));
+            returnVal.setStartOdometer(r.getDouble(9));
+            returnVal.setEndOdometer(ret.getOdometer());
             returnVal.setTotal(calculateTotalCost(returnVal));
         } else {
             throw new IllegalArgumentException("Vehicle was not previously rented");
@@ -135,16 +143,53 @@ public class Clerk {
         db.connection.commit();
         i.close();
 
-        // TODO: set vehicle's status to available
-
+        // get vehicle license associated with rental
+        PreparedStatement state = db.connection.prepareStatement("SELECT v.VLICENSE FROM VEHICLE v, RENT rent " +
+                                                                        "WHERE v.VLICENSE = rent.VLICENSE AND rent.RID = ?");
+        state.setInt(1, ret.getrID());
+        ResultSet rs = state.executeQuery();
+        int vLicense;
+        if (rs.next()) {
+            vLicense = rs.getInt("VLICENSE");
+        } else {
+            throw new IllegalStateException("Error finding vehicle associated with this rental");
+        }
+        PreparedStatement p = db.connection.prepareStatement("UPDATE VEHICLE SET STATUS = 'Available' WHERE VLICENSE = ?");
+        p.setInt(1, vLicense);
+        int res = p.executeUpdate();
+        db.connection.commit();
+        if (res != 1) {
+            throw new IllegalStateException("Failed to update Vehicle status to Available");
+        }
         return returnVal;
+    }
+
+    // returns true if a reservation was already made into a rental
+    private boolean rentalMadeForReservation(Reservation res) throws SQLException {
+        PreparedStatement ps = db.connection.prepareStatement("SELECT * FROM RENT WHERE CONFNO = ?");
+        ps.setInt(1, res.getConfNum());
+        ResultSet rs = ps.executeQuery();
+        return rs.next();
+    }
+
+    // returns true if a vehicle is 'Rented'
+    private boolean vehicleAlreadyRented(Vehicle vehicle) throws SQLException {
+        PreparedStatement ps = db.connection.prepareStatement("SELECT * FROM VEHICLE WHERE VLICENSE = ? AND STATUS = 'Rented'");
+        ps.setInt(1, vehicle.getvLicense());
+        ResultSet rs = ps.executeQuery();
+        return rs.next();
     }
 
     private double calculateTotalCost(ReturnReceipt r) {
         double weeklyCost = elapsedWeeks(r.getRentalDate(), r.getReturnDate()) * r.getWeeklyRate();
-        double dailyCost = elapsedDays(r.getRentalDate(), r.getReturnDate()) * (r.getDailyRate() + r.getDailyInsuranceRate());
-        double hourlyCost = elapsedHours(r.getRentalDate(), r.getReturnDate()) * (r.getHourlyRate() + r.getHourlyInsuranceRate());
-        return weeklyCost + dailyCost + hourlyCost;
+        double dailyCost = (elapsedDaysRemainder(r.getRentalDate(), r.getReturnDate()) * r.getDailyRate())
+                        + (elapsedDays(r.getRentalDate(), r.getReturnDate()) * r.getDailyInsuranceRate());
+        double hourlyCost = elapsedHoursRemainder(r.getRentalDate(), r.getReturnDate()) * (r.getHourlyRate() + r.getHourlyInsuranceRate());
+        System.out.println("weekly cost: " + weeklyCost + " daily cost: " + dailyCost + " hourly cost: " + hourlyCost + "\n");
+        System.out.println("elapsed weeks: " + elapsedWeeks(r.getRentalDate(), r.getReturnDate()) + " elapsed days remainder: " + elapsedDaysRemainder(r.getRentalDate(), r.getReturnDate())
+                            + " total elapsed days: " + elapsedDays(r.getRentalDate(), r.getReturnDate()) + " elapsed hours remainder: " + elapsedHoursRemainder(r.getRentalDate(), r.getReturnDate()));
+        double kmCost = (r.getEndOdometer() - r.getStartOdometer()) * r.getkRate();
+        return weeklyCost + dailyCost + hourlyCost + kmCost;
     }
 
     // gets number of weeks elapsed between the given times
@@ -156,15 +201,23 @@ public class Clerk {
     }
 
     // gets remainder of days elapsed between the given times
-    private int elapsedDays(Timestamp from, Timestamp to) {
+    private int elapsedDaysRemainder(Timestamp from, Timestamp to) {
         long ms1 = from.getTime();
         long ms2 = to.getTime();
         long diff = ms2 - ms1;
         return ((int) (diff / (24 * 60 * 60 * 1000))) % 7;
     }
 
+    // gets total number of days elapsed between the given times
+    private int elapsedDays(Timestamp from, Timestamp to) {
+        long ms1 = from.getTime();
+        long ms2 = to.getTime();
+        long diff = ms2 - ms1;
+        return (int) (diff / (24 * 60 * 60 * 1000));
+    }
+
     // gets remainder of hours elapsed between the given times
-    private int elapsedHours(Timestamp from, Timestamp to) {
+    private int elapsedHoursRemainder(Timestamp from, Timestamp to) {
         long ms1 = from.getTime();
         long ms2 = to.getTime();
         long diff = ms2 - ms1;

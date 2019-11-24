@@ -133,9 +133,10 @@ public class GuiMain implements LoginWindowDelegate {
         return null;
     }
 
-    public JFrame createReturnVehicleWindow() {
+    public void createReturnVehicleWindow() {
         //TODO
-        return null;
+        Return ret = new Return(db);
+        ret.setVisible(true);
     }
 
     public JFrame createReturnReceiptWindow() {

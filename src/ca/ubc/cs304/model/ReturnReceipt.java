@@ -15,6 +15,25 @@ public class ReturnReceipt {
     private double dailyInsuranceRate;
     private double hourlyInsuranceRate;
     private double kRate;
+    private double startOdometer;
+
+    public double getStartOdometer() {
+        return startOdometer;
+    }
+
+    public void setStartOdometer(double startOdometer) {
+        this.startOdometer = startOdometer;
+    }
+
+    public double getEndOdometer() {
+        return endOdometer;
+    }
+
+    public void setEndOdometer(double endOdometer) {
+        this.endOdometer = endOdometer;
+    }
+
+    private double endOdometer;
     private double total;
 
     public double getkRate() {

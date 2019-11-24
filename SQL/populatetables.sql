@@ -4,12 +4,12 @@ insert into customer values (null, 'Jerry', null, 3);
 insert into customer values (null, 'Frank', null, 4);
 
 insert into vehicletype values('Economy', 'Sunroof', 200, 50, 20, 100, 25, 15);
-insert into vehicletype values('Compact', null, null, null, null, null, null, null);
-insert into vehicletype values('Mid-size', null, null, null, null, null, null, null);
-insert into vehicletype values('Standard', null, null, null, null, null, null, null);
-insert into vehicletype values('Full-size', null, null, null, null, null, null, null);
-insert into vehicletype values('SUV', null, null, null, null, null, null, null);
-insert into vehicletype values('Truck', null, null, null, null, null, null, null);
+insert into vehicletype values('Compact', null, 300, 60, 3, 20, 1, 2);
+insert into vehicletype values('Mid-size', null, 400, 70, 4, 25, 2, 3);
+insert into vehicletype values('Standard', null, 500, 80, 5, 30, 3, 4);
+insert into vehicletype values('Full-size', null, 600, 85, 6, 40, 5, 5);
+insert into vehicletype values('SUV', null, 650, 90, 8, 50, 7, 7);
+insert into vehicletype values('Truck', null, 800, 110, 12, 60, 10, 10);
 
 insert into branch values ('Cool Rentals', 'East Vancouver');
 insert into branch values ('Cooler Rentals', 'West Vancouver');
@@ -24,6 +24,8 @@ insert into vehicle values (8, 999999, 'Dodge', 'Ram', 2015, 'White', 30000, 'Av
 insert into vehicle values (5, 555666, 'Tesla', 'Model 3', 2019, 'Black', 10000, 'Available', 'Economy', 'Bad Rentals', 'Maple Ridge');
 insert into vehicle values (6, 666777, 'Dodge', 'Charger', 2017, 'Black', 10000, 'Available', 'Standard', 'Bad Rentals', 'Maple Ridge');
 insert into vehicle values (7, 777888, 'Chevrolet', 'Equinox', 2019, 'Black', 1000, 'Available', 'SUV', 'Bad Rentals', 'Maple Ridge');
+insert into vehicle values (9, 654321, 'Dodge', 'Dart', 2015, 'White', 25000, 'Available', 'Compact', 'Bad Rentals', 'Maple Ridge');
+insert into vehicle values (10, 555321, 'Toyota', 'Corolla', 2011, 'Black', 100000, 'Available', 'Compact', 'Bad Rentals', 'Maple Ridge');
 
 insert into RESERVATION values (1234, 'Truck', 2, TO_TIMESTAMP('2019-11-20 10:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'), TO_TIMESTAMP('2019-12-25 08:15:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'));
 insert into RESERVATION values (1235, 'Economy', 3, TO_TIMESTAMP('2019-12-01 12:00:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'), TO_TIMESTAMP('2019-12-30 10:30:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF'));
