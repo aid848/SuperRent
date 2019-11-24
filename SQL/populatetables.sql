@@ -22,7 +22,7 @@ insert into branch values ('Yikes Rentals', 'Mission');
 
 insert into vehicle values (1,  111222, 'Honda',     'Civic',       1990, 'Red',   200000,  'Available',    'Economy',   'Cool Rentals',    'East Vancouver');
 insert into vehicle values (2,  222333, 'Toyota',    'Corolla',     2001, 'Pink',   50000,  'Available',    'Compact',   'Cool Rentals',    'East Vancouver');
-insert into vehicle values (3,  333444, 'Ford',      'F-150',       2007, 'Green',  50000,  'Rented',       'Truck',     'Cool Rentals',    'East Vancouver');
+insert into vehicle values (3,  333444, 'Ford',      'F-150',       2007, 'Green',  50000,  'Available',    'Truck',     'Cool Rentals',    'East Vancouver');
 insert into vehicle values (4,  444555, 'Ford',      'Ranger',      2002, 'Blue',   50000,  'Rented',       'Truck',     'Cool Rentals',    'East Vancouver');
 insert into vehicle values (5,  555666, 'Tesla',     'Model 3',     2019, 'Black',  10000,  'Rented',       'Compact',   'Bad Rentals',     'Maple Ridge');
 insert into vehicle values (6,  666777, 'Dodge',     'Charger',     2017, 'Black',  10000,  'Available',    'Standard',  'Bad Rentals',     'Maple Ridge');

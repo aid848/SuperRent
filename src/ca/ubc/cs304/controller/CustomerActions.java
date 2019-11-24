@@ -88,7 +88,7 @@ with the vehicles’ details should be displayed).
                     if ((entered[2] & entered[3])) { //has time interval
                         return viewNumberOfVehiclesTimeIntervalOnly(pickupDate, returnDate);
                     } else { // no time interval
-                        return viewNumberOfVehiclesBranchOnly(branch.getLocation(),branch.getCity());
+                        return viewNumberOfVehiclesDefault();
                     }
                 }else { // has location
                     if ((entered[2] & entered[3])) { //has time interval
@@ -117,19 +117,21 @@ with the vehicles’ details should be displayed).
     private String viewNumberOfVehiclesTypeAndLocationAndTime(String type, String location, LocalDateTime pickupDate, LocalDateTime returnDate) {
         return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city\n" +
                 "FROM Vehicle v\n" +
-                "where v.status = 'Available' AND V.VLICENSE in (\n" +
+                "where v.status = 'Available' AND v.VTNAME = '%s' AND v.LOCATION = '%s' AND V.VLICENSE not in (\n" +
                 "    Select r.VLICENSE\n" +
                 "    From RENT r\n" +
-                "    WHERE (%s < r.FROMDATETIME) OR (%s >r.TODATETIME) ) AND v.VTNAME = '%s' AND v.LOCATION = '%s'",dateTimeToOracle(returnDate),dateTimeToOracle(pickupDate),type,location);
+                "    Where (%s > r.FROMDATETIME AND r.TODATETIME > %s) OR (%s > r.FROMDATETIME AND r.TODATETIME > %s))",
+                type, location, dateTimeToOracle(pickupDate), dateTimeToOracle(pickupDate), dateTimeToOracle(returnDate), dateTimeToOracle(returnDate));
     }
 
     private String viewNumberOfVehiclesTypeAndInterval(String type, LocalDateTime pickupDate, LocalDateTime returnDate) {
         return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city\n" +
                 "FROM Vehicle v\n" +
-                "where v.status = 'Available' AND v.VLICENSE in (\n" +
+                "where v.status = 'Available' AND v.VTNAME = '%s' AND v.VLICENSE not in (\n" +
                 "    Select r.VLICENSE\n" +
                 "    From RENT r\n" +
-                "    WHERE ( %s < r.FROMDATETIME) OR ( %s >r.TODATETIME) ) AND v.VTNAME = '%s'",dateTimeToOracle(returnDate),dateTimeToOracle(pickupDate),type);
+                "    Where (%s > r.FROMDATETIME AND r.TODATETIME > %s) OR (%s > r.FROMDATETIME AND r.TODATETIME > %s))",
+                type, dateTimeToOracle(pickupDate), dateTimeToOracle(pickupDate), dateTimeToOracle(returnDate), dateTimeToOracle(returnDate));
     }
 
     private String viewNumberOfVehiclesTypeAndLocation(String type, String location) {
@@ -153,27 +155,30 @@ with the vehicles’ details should be displayed).
     private String viewNumberOfVehiclesLocationAndInterval(String location, LocalDateTime pickupDate, LocalDateTime returnDate) {
         return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city\n" +
                 "FROM Vehicle v\n" +
-                "where v.STATUS = 'Available' AND v.VLICENSE in (\n" +
+                "where v.STATUS = 'Available' AND v.LOCATION = '%s' AND v.VLICENSE not in (\n" +
                 "    Select r.VLICENSE\n" +
                 "    From RENT r\n" +
-                "    WHERE (%s < r.FROMDATETIME) OR (%s>r.TODATETIME) ) AND v.LOCATION = '%s'",dateTimeToOracle(returnDate),dateTimeToOracle(pickupDate),location);
+                "    Where (%s > r.FROMDATETIME AND r.TODATETIME > %s) OR (%s > r.FROMDATETIME AND r.TODATETIME > %s))",
+                location, dateTimeToOracle(pickupDate), dateTimeToOracle(pickupDate), dateTimeToOracle(returnDate), dateTimeToOracle(returnDate));
     }
 
     private String viewNumberOfVehiclesTimeIntervalOnly(LocalDateTime pickupDate, LocalDateTime returnDate) {
         return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city\n" +
                 "FROM Vehicle v\n" +
-                "where ((v.STATUS = 'Available') AND v.VLICENSE in (\n" +
+                "where (v.STATUS = 'Available') AND v.VLICENSE not in (\n" +
                 "    Select r.VLICENSE\n" +
                 "    From RENT r\n" +
-                "    WHERE ((%s < r.FROMDATETIME) OR (%s>r.TODATETIME))))",dateTimeToOracle(returnDate),dateTimeToOracle(pickupDate));
+                "    Where (%s > r.FROMDATETIME AND r.TODATETIME > %s) OR (%s > r.FROMDATETIME AND r.TODATETIME > %s))",
+                dateTimeToOracle(pickupDate), dateTimeToOracle(pickupDate), dateTimeToOracle(returnDate), dateTimeToOracle(returnDate));
 
     }
 
-    private String viewNumberOfVehiclesBranchOnly(String location, String city) {
-        return String.format("SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city\n" +
+    // defaults to Cool Rentals branch
+    private String viewNumberOfVehiclesDefault() {
+        return "SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city\n" +
                 "FROM Vehicle v\n" +
-                "WHERE v.LOCATION = '%s' AND v.CITY = '%s' AND v.STATUS = 'Available'\n" +
-                "Order by v.MAKE",location,city);
+                "WHERE v.LOCATION = 'Cool Rentals' AND v.CITY = 'East Vancouver' AND v.STATUS = 'Available'\n" +
+                "Order by v.MAKE";
     }
 
     public int countTuples(String tableName) throws SQLException {
