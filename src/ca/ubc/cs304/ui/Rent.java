@@ -54,7 +54,7 @@ public class Rent extends JFrame {
         // add year spinner
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         SpinnerModel yearModel = new SpinnerNumberModel(currentYear, // initial value
-                                                        currentYear - 20, // min
+                                                        currentYear, // min
                                                         currentYear + 20, // max
                                                         1); // step
         yearSpinner.setModel(yearModel);
@@ -62,14 +62,17 @@ public class Rent extends JFrame {
 
         // add month spinner
         SpinnerListModel monthModel = new SpinnerListModel(monthStrings);
+        monthModel.setValue(monthStrings[Calendar.getInstance().get(Calendar.MONTH)]);
         monthSpinner.setModel(monthModel);
 
         // add day spinner
-        SpinnerModel dayModel = new SpinnerNumberModel(1, 1, 31, 1);
+        int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+        SpinnerModel dayModel = new SpinnerNumberModel(currentDay + 1, 1, 31, 1);
         daySpinner.setModel(dayModel);
 
         // add hour spinner
-        SpinnerModel hourModel = new SpinnerNumberModel(0, 0, 23, 1);
+        int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        SpinnerModel hourModel = new SpinnerNumberModel(currentHour, 0, 23, 1);
         hourSpinner.setModel(hourModel);
 
         // set vehicle type combobox
@@ -88,6 +91,7 @@ public class Rent extends JFrame {
                         throw new IllegalArgumentException("Reservation confirmation number must be an integer");
                     }
                     checkCreditCardConstraints();
+                    checkBranchLocationConstraints();
                     long cardNo = Long.parseLong(creditCardNoTextField.getText());
                     DateFormat df = new SimpleDateFormat("MMYY");
                     Date expDate = new java.sql.Date(df.parse(creditCardExpiryTextField.getText()).getTime());
@@ -96,9 +100,13 @@ public class Rent extends JFrame {
                     card.setCardNo(cardNo);
                     card.setExpDate(expDate);
 
+                    String branchName = branchNameTextField.getText();
+                    String city = cityTextField.getText();
+                    Branch branch = new Branch(branchName, city);
+
                     Clerk clerk = new Clerk(db);
                     Reservation r = clerk.getReservation(Integer.parseInt(reservationConfNumTextField.getText()));
-                    Vehicle v = clerk.getAvailableVehicle(r.getvTName());
+                    Vehicle v = clerk.getAvailableVehicle(r.getvTName(), branch);
                     Rental rental = clerk.getRentalReceipt(r, v, card);
                     JOptionPane.showMessageDialog(null,
                                                 "Rental ID: " + rental.getrId() + "\n"
@@ -123,9 +131,7 @@ public class Rent extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     checkCreditCardConstraints();
-                    if (branchNameTextField.getText().length() == 0) {
-                        throw new IllegalArgumentException("Location must be provided");
-                    }
+                    checkBranchLocationConstraints();
                     if (dLicenseTextField.getText().length() == 0) {
                         throw new IllegalArgumentException("Driver's license must be provided");
                     }
@@ -150,9 +156,7 @@ public class Rent extends JFrame {
                     Instant instant = Instant.ofEpochMilli(date.getTime());
                     LocalDateTime to = LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
 
-                    String branchName = branchNameTextField.getText();
-                    String city = cityTextField.getText();
-                    Branch branch = new Branch(branchName, city);
+
                     String vtName = (String) vTypeComboBox.getSelectedItem();
                     int dLicense = Integer.parseInt(dLicenseTextField.getText());
 
@@ -170,13 +174,18 @@ public class Rent extends JFrame {
                     card.setCardNo(cardNo);
                     card.setExpDate(expDate);
 
+                    String branchName = branchNameTextField.getText();
+                    String city = cityTextField.getText();
+                    Branch branch = new Branch(branchName, city);
+
                     Clerk clerk = new Clerk(db);
                     Reservation r = clerk.getReservation(confirmationNo);
-                    Vehicle v = clerk.getAvailableVehicle(r.getvTName());
+                    Vehicle v = clerk.getAvailableVehicle(r.getvTName(), branch);
                     Rental rental = clerk.getRentalReceipt(r, v, card);
                     JOptionPane.showMessageDialog(null,
                             "Rental ID: " + rental.getrId() + "\n"
                                     + "Reservation confirmation #: " + rental.getConfNo() + "\n"
+                                    + "Location: " + branch.getLocation() + ", " + branch.getCity() + "\n"
                                     + "From: " + rental.getFromDateTime() + "\n"
                                     + "To: " + rental.getToDateTime() + "\n"
                                     + "License plate: " + rental.getvLicense() + "\n"
@@ -201,6 +210,15 @@ public class Rent extends JFrame {
         }
         if (creditCardExpiryTextField.getText().length() != 4) {
             throw new IllegalArgumentException("Credit card expiry date must be 4 digits");
+        }
+    }
+
+    private void checkBranchLocationConstraints() {
+        if (branchNameTextField.getText().length() == 0) {
+            throw new IllegalArgumentException("Branch name must be provided");
+        }
+        if (cityTextField.getText().length() == 0) {
+            throw new IllegalArgumentException("City must be provided");
         }
     }
 

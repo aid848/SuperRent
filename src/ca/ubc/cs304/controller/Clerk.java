@@ -15,10 +15,12 @@ public class Clerk {
         assert (this.db.connection != null);
     }
 
-    // gets first available vehicle of given type
-    public Vehicle getAvailableVehicle(String vehicleType) throws SQLException {
-        PreparedStatement statement = db.connection.prepareStatement("SELECT * FROM VEHICLE WHERE VTNAME = ? AND STATUS = 'Available'");
+    // gets first available vehicle of given type at the given branch
+    public Vehicle getAvailableVehicle(String vehicleType, Branch branch) throws SQLException {
+        PreparedStatement statement = db.connection.prepareStatement("SELECT * FROM VEHICLE WHERE VTNAME = ? AND LOCATION = ? AND CITY = ? AND STATUS = 'Available'");
         statement.setString(1, vehicleType);
+        statement.setString(2, branch.getLocation());
+        statement.setString(3, branch.getCity());
         ResultSet result = statement.executeQuery();
         while (result.next()) {
             if (result.getString("STATUS").equals("Available")) {
@@ -37,7 +39,7 @@ public class Clerk {
                 return v;
             }
         }
-        throw new IllegalArgumentException("No vehicles are currently available to rent");
+        throw new IllegalArgumentException("No vehicles are currently available to rent at this location");
     }
 
     // gets Reservation associated with the given reservation confirmation #

@@ -1,118 +1,105 @@
 NOTE ADD INTERVALS ARE FORMAT end - start
 
-1. TypeAndLocationAndTime * complete
+1. TypeAndLocationAndTime * complete2 added
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-where (((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in (
+where v.status = 'Available' AND V.VLICENSE in (
     Select r.VLICENSE
     From RENT r
-    WHERE ((TO_TIMESTAMP('2019-11-29 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF') < r.FROMDATETIME) OR (TO_TIMESTAMP('2019-11-27 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF')>r.TODATETIME))))) AND v.VTNAME = 'Economy' AND v.LOCATION = 'Bad Rentals';
+    WHERE ((TO_TIMESTAMP('2019-11-29 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF') < r.FROMDATETIME) OR (TO_TIMESTAMP('2019-11-27 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF')>r.TODATETIME))) AND v.VTNAME = 'Economy' AND v.LOCATION = 'Bad Rentals';
 
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-where (((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in (
+where v.status = 'Available' AND V.VLICENSE in (
     Select r.VLICENSE
     From RENT r
-    WHERE ((%s < r.FROMDATETIME) OR (%s >r.TODATETIME))))) AND v.VTNAME = '%s' AND v.LOCATION = '%s';
+    WHERE ((%s < r.FROMDATETIME) OR (%s)) AND v.VTNAME = '%s' AND v.LOCATION = '%s';
 
 
-2. viewNumberOfVehiclesTypeAndInterval * complete
+2. viewNumberOfVehiclesTypeAndInterval * complete2 added
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-where (((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in (
+where ((v.status = 'Available' AND v.VLICENSE in (
     Select r.VLICENSE
     From RENT r
     WHERE ((TO_TIMESTAMP('2019-11-29 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF') < r.FROMDATETIME) OR (TO_TIMESTAMP('2019-11-27 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF')>r.TODATETIME))))) AND v.VTNAME = 'Economy';
 
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-where (((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in (
+where ((v.status = 'Available' AND v.VLICENSE in (
     Select r.VLICENSE
     From RENT r
-    WHERE ((%s < r.FROMDATETIME) OR (%s >r.TODATETIME))))) AND v.VTNAME = '%s';
+    WHERE ( %s < r.FROMDATETIME) OR ( %s >r.TODATETIME))))) AND v.VTNAME = '%s';
 
 
-3. viewNumberOfVehiclesTypeAndLocation *complete
+3. viewNumberOfVehiclesTypeAndLocation *complete2 added
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-WHERE v.VTNAME = 'Economy' AND v.location = 'Cool Rentals' And v.VLICENSE is not null AND r.VLICENSE is null;
-
-SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
-FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-WHERE v.VTNAME = '%s' AND v.location = '%s' And v.VLICENSE is not null AND r.VLICENSE is null;
-
-4. viewNumberOfVehiclesType * complete
-SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
-FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-WHERE v.VTNAME = 'Standard' And v.VLICENSE is not null AND r.VLICENSE is null;
+WHERE v.VTNAME = 'SUV' AND v.location = 'Super Rentals' And v.STATUS = 'Available';
 
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-WHERE v.VTNAME = '%s' And v.VLICENSE is not null AND r.VLICENSE is null;
+WHERE v.VTNAME = '%s' AND v.location = '%s' And v.STATUS = 'Available';
 
-5. viewNumberOfVehiclesLocationOnly * complete
+4. viewNumberOfVehiclesType * complete2 added
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-WHERE v.LOCATION = 'Cool Rentals' And v.VLICENSE is not null AND r.VLICENSE is null;
+WHERE v.VTNAME = 'Standard' And v.STATUS = 'Available';
 
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-WHERE v.LOCATION = '%s' And v.VLICENSE is not null AND r.VLICENSE is null;
+WHERE v.VTNAME = '%s' And v.STATUS = 'Available';
 
-6. viewNumberOfVehiclesLocationAndInterval * complete
+5. viewNumberOfVehiclesLocationOnly * complete2 added
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-where (((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in (
+WHERE v.LOCATION = 'Bad Rentals' And v.STATUS = 'Available';
+
+SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
+FROM Vehicle v
+WHERE v.LOCATION = '%s' And v.STATUS = 'Available';
+
+6. viewNumberOfVehiclesLocationAndInterval * complete2 added
+SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
+FROM Vehicle v
+where (((v.STATUS = 'Available') AND v.VLICENSE in (
     Select r.VLICENSE
     From RENT r
     WHERE ((TO_TIMESTAMP('2019-11-29 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF') < r.FROMDATETIME) OR (TO_TIMESTAMP('2019-11-27 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF')>r.TODATETIME))))) AND v.LOCATION = 'Cool Rentals';
 
+
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-where (((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in (
+where (((v.STATUS = 'Available') AND v.VLICENSE in (
     Select r.VLICENSE
     From RENT r
-    WHERE ( %s < r.FROMDATETIME) OR ( %s > r.TODATETIME))))) AND v.LOCATION = '%s';
+    WHERE ((%s < r.FROMDATETIME) OR %s>r.TODATETIME))))) AND v.LOCATION = '%s';
 
-7. viewNumberOfVehiclesTimeIntervalOnly * complete
+
+7. viewNumberOfVehiclesTimeIntervalOnly * complete2 added
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-where ((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in (
+where ((v.STATUS = 'Available') AND v.VLICENSE in (
     Select r.VLICENSE
     From RENT r
     WHERE ((TO_TIMESTAMP('2019-11-29 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF') < r.FROMDATETIME) OR (TO_TIMESTAMP('2019-11-27 12:10:00.000000 ', 'YYYY-MM-DD HH24:MI:SS.FF')>r.TODATETIME))));
 
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-where ((v.VLICENSE is not null AND r.VLICENSE is null) OR R.VLICENSE in (
+where ((v.STATUS = 'Available') AND v.VLICENSE in (
     Select r.VLICENSE
     From RENT r
-    WHERE (( %s < r.FROMDATETIME) OR ( %s > r.TODATETIME))));
+    WHERE ((%s < r.FROMDATETIME) OR (%s>r.TODATETIME))));
 
 
-8. viewNumberOfVehiclesBranchOnly * complete
+8. viewNumberOfVehiclesBranchOnly * complete2 added
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-WHERE v.LOCATION = 'Cool Rentals' AND v.CITY = 'East Vancouver' AND v.VLICENSE is not null AND r.VLICENSE is null
+WHERE v.LOCATION = 'Cool Rentals' AND v.CITY = 'East Vancouver' AND v.STATUS = 'Available'
 Order by v.MAKE;
 
 SELECT v.vid,v.vlicense, v.make,v.model,v.year,v.color,v.odometer,v.vtname,v.location,v.city
 FROM Vehicle v
-left outer join RENT R on v.VLICENSE = R.VLICENSE
-WHERE v.LOCATION = '%s' AND v.CITY = '%s' AND v.VLICENSE is not null AND r.VLICENSE is null
+WHERE v.LOCATION = '%s' AND v.CITY = '%s' AND v.STATUS = 'Available'
 Order by v.MAKE;
+

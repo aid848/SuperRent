@@ -99,7 +99,7 @@ public class GuiMain implements LoginWindowDelegate {
 
     private Component[] setupCustomerAndClerkActionButtons() {
         String[] actions = new String[]{"Search Available Vehicles", "Make Reservation","Rent Vehicle",
-                "Return Vehicle", "All Daily Rentals Report","Daily Rentals by Branch", "Daily Returns", "Branch Daily Returns", "Create new Customer", "Terminal & Setup" };
+                "Return Vehicle", "Daily Reports","Daily Reports by Branch", "Create new Customer", "Terminal & Setup" };
         ArrayList<JButton> buttons = new ArrayList<>();
         int i = 1;
         for (String action : actions) {
@@ -134,7 +134,7 @@ public class GuiMain implements LoginWindowDelegate {
         try { //closes any window before it
             openWindows.pop().dispose();
         } catch (Exception ignored){ }
-        JFrame main = windowBuilder(setupCustomerAndClerkActionButtons(),true,new GridLayout(5,2));
+        JFrame main = windowBuilder(setupCustomerAndClerkActionButtons(),true,new GridLayout(4,2));
         openWindows.push(main);
     }
 
@@ -204,6 +204,9 @@ public class GuiMain implements LoginWindowDelegate {
         timeStuff.add(to_hint);
         timeStuff.add(to);
         // have clickable number shown
+            JButton reset = new JButton("Reset Fields");
+            reset.addActionListener(customerListener);
+            reset.setActionCommand("reset");
             results = new JButton("Results");
             results.setActionCommand("Show Details");
             results.addActionListener(customerListener);
@@ -216,6 +219,7 @@ public class GuiMain implements LoginWindowDelegate {
             JPanel clickable = new JPanel();
 
 //            clickable.add(reserveVehicles);
+            clickable.add(reset);
             clickable.add(findVehicles);
             clickable.add(results);
         // have scrollable tuples shown
@@ -265,7 +269,8 @@ public class GuiMain implements LoginWindowDelegate {
         } else {
             locationText = location.getText();
         }
-        if (from.getText().isEmpty() | to.getText().isEmpty()) {
+        String wtf = from.getText();
+        if (from.getText().equals("    -  -  -  -  ") | to.getText().equals("    -  -  -  -  ")) {
             fromText = null;
             toText = null;
         }else {
@@ -273,9 +278,13 @@ public class GuiMain implements LoginWindowDelegate {
                 if (validateDate(from.getText()) & validateDate(to.getText())) {
                     fromText = createDate(from.getText());
                     toText = createDate(to.getText());
+                    if (fromText.isBefore(LocalDateTime.now()) || toText.isBefore(LocalDateTime.now()) || toText.isBefore(fromText) ) {
+                        errorMessage("Date range invalid");
+                        return;
+                    }
                 } else {
-                    fromText = null;
-                    toText = null;
+                    errorMessage("Date is not valid");
+                    return;
                 }
             } catch (Exception e ) {
                 fromText = null;
@@ -503,4 +512,8 @@ public class GuiMain implements LoginWindowDelegate {
         }
     }
 
+    public void resetAvailableFields() throws ParseException {
+        openWindows.pop().dispose();
+        createViewAvailableVehiclesWindow();
+    }
 }

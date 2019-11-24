@@ -39,7 +39,7 @@ public class Return extends JFrame {
         // add year spinner
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         SpinnerModel yearModel = new SpinnerNumberModel(currentYear, // initial value
-                currentYear - 20, // min
+                currentYear, // min
                 currentYear + 20, // max
                 1); // step
         yearSpinner.setModel(yearModel);
@@ -47,14 +47,17 @@ public class Return extends JFrame {
 
         // add month spinner
         SpinnerListModel monthModel = new SpinnerListModel(monthStrings);
+        monthModel.setValue(monthStrings[Calendar.getInstance().get(Calendar.MONTH)]);
         monthSpinner.setModel(monthModel);
 
         // add day spinner
-        SpinnerModel dayModel = new SpinnerNumberModel(1, 1, 31, 1);
+        int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+        SpinnerModel dayModel = new SpinnerNumberModel(currentDay, 1, 31, 1);
         daySpinner.setModel(dayModel);
 
         // add hour spinner
-        SpinnerModel hourModel = new SpinnerNumberModel(0, 0, 23, 1);
+        int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        SpinnerModel hourModel = new SpinnerNumberModel(currentHour, 0, 23, 1);
         hourSpinner.setModel(hourModel);
 
         // add radio buttons to group
