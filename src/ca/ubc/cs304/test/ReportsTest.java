@@ -2,14 +2,14 @@ package ca.ubc.cs304.test;
 
 import ca.ubc.cs304.controller.Reports;
 import ca.ubc.cs304.database.DatabaseConnectionHandler;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class ReportsTest {
     private static Reports reports;
-    @BeforeAll
+    @Before
     static void login(){
         String username = "ora_"; //put your own credentials in here for testing
         String password = "a";
