@@ -32,7 +32,7 @@ public class ClerkTest {
     @Before
     public void setup() {
         db = new DatabaseConnectionHandler();
-        db.login("ora_eatnow", "a31745136");
+        db.login("ora_", "a");
         clerk = new Clerk(db);
         try {
             firstTimeSetup(1);
